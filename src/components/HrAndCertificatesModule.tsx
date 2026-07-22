@@ -1,45 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
-  Briefcase,
-  Plus,
-  Search,
-  CheckCircle,
-  XCircle,
   Printer,
-  FileCheck,
-  UserCheck,
   Award,
-  BookOpen,
 } from "lucide-react";
-import { Teacher, Staff, LeaveRequest, Payslip } from "../types";
+import { Teacher, Staff, LeaveRequest, Payslip, SchoolConfig } from "../types";
 
 interface HrAndCertificatesModuleProps {
   teachers: Teacher[];
   staff: Staff[];
-  leaveRequests: LeaveRequest[];
-  setLeaveRequests: React.Dispatch<React.SetStateAction<LeaveRequest[]>>;
-  payroll: Payslip[];
-  setPayroll: React.Dispatch<React.SetStateAction<Payslip[]>>;
-  initialSubTab?: "payroll" | "leaves" | "certificates";
+  leaveRequests?: LeaveRequest[];
+  setLeaveRequests?: React.Dispatch<React.SetStateAction<LeaveRequest[]>>;
+  payroll?: Payslip[];
+  setPayroll?: React.Dispatch<React.SetStateAction<Payslip[]>>;
+  initialSubTab?: string;
+  schoolConfig?: SchoolConfig;
 }
 
 export function HrAndCertificatesModule({
   teachers,
   staff,
-  leaveRequests,
-  setLeaveRequests,
-  payroll,
-  setPayroll,
-  initialSubTab,
+  schoolConfig,
 }: HrAndCertificatesModuleProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"payroll" | "leaves" | "certificates">("payroll");
-
-  useEffect(() => {
-    if (initialSubTab) {
-      setActiveSubTab(initialSubTab);
-    }
-  }, [initialSubTab]);
-
   // Certificate generator states
   const [certType, setCertType] = useState<"Character" | "Leaving" | "Admission">("Character");
   const [certStudentName, setCertStudentName] = useState("");
@@ -51,58 +32,14 @@ export function HrAndCertificatesModule({
   // Payslip states
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
 
-  // Handle leave approval
-  const handleLeaveStatusChange = (requestId: string, status: "Approved" | "Rejected") => {
-    const updated = leaveRequests.map((req) => (req.id === requestId ? { ...req, status } : req));
-    setLeaveRequests(updated);
-    alert(`Leave request status marked as ${status}.`);
-  };
-
-  // Issue monthly payroll payout
-  const handleProcessPayroll = () => {
-    alert("Executing direct deposits... Bank transmission verified! Salary paychecks dispatched successfully.");
-  };
-
   return (
     <div className="space-y-6" id="hr-certificates-root">
-      {/* Sub tabs */}
-      <div className="flex border-b border-slate-200">
-        <button
-          onClick={() => {
-            setActiveSubTab("payroll");
-            setIsViewingCertificate(false);
-            setSelectedPayslip(null);
-          }}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition ${
-            activeSubTab === "payroll" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          Staff Payroll & PaySlips
-        </button>
-        <button
-          onClick={() => {
-            setActiveSubTab("leaves");
-            setIsViewingCertificate(false);
-            setSelectedPayslip(null);
-          }}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition ${
-            activeSubTab === "leaves" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          Leave Management
-        </button>
-        <button
-          onClick={() => {
-            setActiveSubTab("certificates");
-            setIsViewingCertificate(false);
-            setSelectedPayslip(null);
-          }}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition ${
-            activeSubTab === "certificates" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          Institutional Certificates
-        </button>
+      {/* Header */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-extrabold text-slate-900">Institutional Certificates Generator</h3>
+          <p className="text-xs text-slate-500">Generate, draft, and print official student character and transfer certificates</p>
+        </div>
       </div>
 
       {/* VIEW: Payslip Detailed Modal */}
@@ -124,7 +61,9 @@ export function HrAndCertificatesModule({
           <div className="border border-slate-300 rounded-xl p-5 space-y-4 text-xs bg-slate-50/50" id="payslip-frame">
             <div className="flex justify-between items-start pb-3 border-b border-slate-200">
               <div>
-                <h3 className="font-extrabold text-sm text-slate-800 uppercase">Citizen School and College</h3>
+                <h3 className="font-extrabold text-sm text-slate-800 uppercase">
+                  {schoolConfig?.schoolName || "Citizen School and College"}
+                </h3>
                 <p className="text-[9px] text-slate-400">Institutional Treasury Department</p>
               </div>
               <div className="text-right">
@@ -188,221 +127,227 @@ export function HrAndCertificatesModule({
 
       {/* VIEW: Certificate Display Mode */}
       {isViewingCertificate && (
-        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6 max-w-2xl mx-auto" id="printable-certificate-view">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
-              Official Printable Certificate Preview
-            </h4>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-6 max-w-3xl mx-auto shadow-lg" id="printable-certificate-view">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                <Award className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                  Official Institutional Certificate Preview
+                </h4>
+                <p className="text-[11px] text-slate-500">Ref No: CSC/CERT/2026/{Math.floor(1000 + Math.random() * 9000)}</p>
+              </div>
+            </div>
             <button
               onClick={() => setIsViewingCertificate(false)}
-              className="text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 px-3.5 py-1.5 rounded-lg"
+              className="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl transition"
             >
-              Back to Design Panel
+              ← Back to Editor
             </button>
           </div>
 
-          {/* Certificate Frame with elegant double border */}
+          {/* Certificate Frame with elegant gold/navy double border & watermark */}
           <div
             id="certificate-frame"
-            className="border-[12px] border-double border-slate-800 p-8 space-y-6 text-center relative bg-amber-50/10 min-h-[460px] flex flex-col justify-between font-serif"
+            className="border-[10px] border-double border-slate-900 p-8 md:p-10 text-center relative bg-gradient-to-b from-amber-50/20 via-white to-amber-50/20 min-h-[500px] flex flex-col justify-between font-serif rounded-xl shadow-xs overflow-hidden"
           >
-            {/* Top insignia */}
-            <div className="space-y-1">
-              <Award className="w-10 h-10 text-amber-600 mx-auto animate-pulse" />
-              <h2 className="text-lg font-bold uppercase tracking-widest text-slate-800">
-                Citizen School and College
-              </h2>
-              <span className="block text-[8px] uppercase tracking-widest text-slate-400 font-sans">
-                Consolidated Academic Registrars Office
-              </span>
+            {/* Corner Ornaments */}
+            <div className="absolute top-2 left-2 text-amber-600 font-bold text-xs select-none">❖</div>
+            <div className="absolute top-2 right-2 text-amber-600 font-bold text-xs select-none">❖</div>
+            <div className="absolute bottom-2 left-2 text-amber-600 font-bold text-xs select-none">❖</div>
+            <div className="absolute bottom-2 right-2 text-amber-600 font-bold text-xs select-none">❖</div>
+
+            {/* Background Watermark Seal */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03]">
+              <Award className="w-96 h-96 text-slate-900" />
             </div>
 
-            {/* Core message */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-amber-700 italic font-serif">
+            {/* Top insignia & School Header */}
+            <div className="space-y-2 relative z-10">
+              <div className="w-14 h-14 bg-amber-500/10 border-2 border-amber-600 rounded-full flex items-center justify-center mx-auto text-amber-600 shadow-2xs">
+                <Award className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-slate-900">
+                {schoolConfig?.schoolName || "CITIZEN SCHOOL & COLLEGE LAHORE"}
+              </h2>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-sans font-bold">
+                Government Registered & Board Affiliated Institution | Reg # PK-9042-CSC
+              </p>
+              <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-amber-600 to-transparent mx-auto mt-1"></div>
+            </div>
+
+            {/* Core Certificate Title & Body text */}
+            <div className="space-y-5 relative z-10 my-4">
+              <h3 className="text-2xl md:text-3xl font-black text-amber-800 italic font-serif tracking-wide border-b border-amber-200/60 pb-2 inline-block px-6">
                 {certType === "Character" && "Certificate of Character"}
                 {certType === "Leaving" && "School Leaving Transfer Certificate"}
                 {certType === "Admission" && "Official Letter of Admission"}
               </h3>
 
-              <div className="text-xs text-slate-600 leading-relaxed font-sans max-w-md mx-auto space-y-3">
+              <div className="text-xs md:text-sm text-slate-800 leading-relaxed font-sans max-w-xl mx-auto space-y-4 pt-2">
                 <p>
-                  This is officially to verify and declare that <strong>{certStudentName || "AISHA REHMAN"}</strong>,{" "}
-                  child of <strong>{certFatherName || "MUHAMMAD REHMAN"}</strong>, was a bona fide student of this institution,
-                  studying in <strong>{certClass}</strong> {certRollNo && `under Roll Number #${certRollNo}`}.
+                  This is officially to verify and declare that <strong className="text-slate-950 font-black border-b border-slate-400 pb-0.5 px-1">{certStudentName || "AISHA REHMAN"}</strong>,{" "}
+                  child of <strong className="text-slate-950 font-black border-b border-slate-400 pb-0.5 px-1">{certFatherName || "MUHAMMAD REHMAN"}</strong>, was a bona fide student of this institution,
+                  studying in <strong className="text-amber-900 font-black">{certClass}</strong> {certRollNo && <span>under Roll Number <strong className="text-slate-900">#{certRollNo}</strong></span>}.
                 </p>
 
                 {certType === "Character" && (
-                  <p>
-                    During her tenure at this school, she displayed exemplary discipline, moral character, and dedication to
-                    extracurricular academics. We wish her every success in her upcoming professional life.
+                  <p className="text-slate-700 italic">
+                    During her tenure at this school, she displayed exemplary discipline, high moral character, and dedicated performance in
+                    both curricular and co-curricular activities. We wish her every success in all future academic endeavors.
                   </p>
                 )}
 
                 {certType === "Leaving" && (
-                  <p>
-                    All outstanding dues, fees, and institution levies have been successfully settled. Her enrollment is officially
-                    withdrawn, and her records are transferred to facilitate further admissions.
+                  <p className="text-slate-700 italic">
+                    All outstanding dues, library books, fees, and institution levies have been successfully settled in full. Her enrollment is officially
+                    withdrawn, and her school leaving transfer certificate is issued to facilitate further higher education.
                   </p>
                 )}
 
                 {certType === "Admission" && (
-                  <p>
-                    Having cleared all entry examinations and requirements, the student is officially admitted with all standard academic
-                    privileges and roles.
+                  <p className="text-slate-700 italic">
+                    Having cleared all competitive entry assessments and admission criteria, the candidate is granted official enrollment with full academic rights, student ID credentials, and privileges.
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Verification Signatures footer */}
-            <div className="flex justify-between items-end border-t border-slate-200 pt-6 font-sans text-[10px]">
-              <div className="text-left">
-                <p className="font-bold text-slate-700">Date: {new Date().toLocaleDateString()}</p>
-                <p className="text-slate-400">Registry Office</p>
+            {/* Verification Signatures & Stamp footer */}
+            <div className="flex justify-between items-end border-t-2 border-dashed border-slate-300 pt-6 font-sans text-xs relative z-10">
+              <div className="text-left space-y-1">
+                <p className="font-extrabold text-slate-800">Issue Date: <span className="font-mono text-slate-600">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span></p>
+                <p className="text-[10px] text-slate-500 font-semibold">Verification Code: <span className="font-mono text-emerald-800">VER-2026-OK</span></p>
+                <p className="text-[9px] text-slate-400">Consolidated Registrars Office</p>
               </div>
+
+              {/* Official Seal Badge graphic */}
+              <div className="w-16 h-16 border-2 border-dashed border-amber-600/60 rounded-full flex flex-col items-center justify-center text-[8px] font-black text-amber-800 uppercase p-1 text-center bg-amber-50/50 shadow-2xs">
+                <span>OFFICIAL</span>
+                <span className="text-[10px]">★</span>
+                <span>SEAL</span>
+              </div>
+
               <div className="text-right space-y-1">
-                <div className="w-24 border-b border-slate-400 mx-auto"></div>
-                <p className="font-bold text-slate-700">Principal Supervisor</p>
-                <p className="text-[8px] text-slate-400">Authorized Seal</p>
+                <div className="w-28 border-b-2 border-slate-700 mx-auto"></div>
+                <p className="font-black text-slate-900">Principal Supervisor</p>
+                <p className="text-[9px] text-slate-500 font-semibold">Citizen School & College</p>
               </div>
             </div>
           </div>
 
-          <div className="text-center">
+          {/* Print Actions Bar */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <button
-              onClick={() => window.print()}
-              className="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 py-2.5 px-6 rounded-lg flex items-center gap-1.5 mx-auto"
+              onClick={() => {
+                const printWin = window.open("", "_blank");
+                if (!printWin) return;
+
+                const certTitle = certType === "Character" 
+                  ? "Certificate of Character" 
+                  : certType === "Leaving" 
+                  ? "School Leaving Transfer Certificate" 
+                  : "Official Letter of Admission";
+
+                const printHtml = `
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <title>${certTitle} - ${certStudentName || "Student"}</title>
+                      <style>
+                        @page { size: A4 landscape; margin: 12mm; }
+                        body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; color: #0f172a; }
+                        .cert-border {
+                          border: 12px double #0f172a;
+                          padding: 40px;
+                          min-height: 520px;
+                          display: flex;
+                          flex-direction: column;
+                          justify-content: space-between;
+                          text-align: center;
+                          box-sizing: border-box;
+                          position: relative;
+                        }
+                        .corner { position: absolute; font-size: 14px; color: #b45309; }
+                        .top-l { top: 8px; left: 8px; }
+                        .top-r { top: 8px; right: 8px; }
+                        .bot-l { bottom: 8px; left: 8px; }
+                        .bot-r { bottom: 8px; right: 8px; }
+                        .school-title { font-size: 26px; font-weight: 900; text-transform: uppercase; color: #0f172a; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; }
+                        .school-sub { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 1px; margin-top: 3px; font-family: sans-serif; }
+                        .cert-type { font-size: 28px; font-weight: 900; font-style: italic; color: #92400e; margin: 20px 0 15px 0; border-bottom: 2px solid #fde68a; display: inline-block; padding: 0 25px 5px 25px; }
+                        .body-text { font-size: 16px; line-height: 1.8; color: #1e293b; max-width: 750px; margin: 0 auto; font-family: 'Georgia', serif; }
+                        .highlight { font-weight: bold; color: #0f172a; border-bottom: 1px solid #475569; padding: 0 4px; }
+                        .footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px dashed #cbd5e1; padding-top: 25px; margin-top: 20px; font-family: sans-serif; font-size: 12px; }
+                        .sig-line { width: 140px; border-bottom: 2px solid #0f172a; margin-bottom: 4px; }
+                        .seal-badge { width: 70px; h: 70px; border: 2px dashed #b45309; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #92400e; text-align: center; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="cert-border">
+                        <div class="corner top-l">❖</div>
+                        <div class="corner top-r">❖</div>
+                        <div class="corner bot-l">❖</div>
+                        <div class="corner bot-r">❖</div>
+
+                        <div>
+                          <div class="school-title">${schoolConfig?.schoolName || "CITIZEN SCHOOL & COLLEGE LAHORE"}</div>
+                          <div class="school-sub">Government Registered & Board Affiliated Institution | Reg # PK-9042-CSC</div>
+                        </div>
+
+                        <div>
+                          <div class="cert-type">${certTitle}</div>
+                          <div class="body-text">
+                            This is officially to verify and declare that <span class="highlight">${certStudentName || "AISHA REHMAN"}</span>,
+                            child of <span class="highlight">${certFatherName || "MUHAMMAD REHMAN"}</span>, was a bona fide student of this institution,
+                            studying in <strong>${certClass}</strong> ${certRollNo ? `under Roll Number <strong>#${certRollNo}</strong>` : ''}.
+                            <br/><br/>
+                            ${certType === "Character" ? "During her tenure at this school, she displayed exemplary discipline, moral character, and dedication to academics. We wish her every success in her future endeavors." : ""}
+                            ${certType === "Leaving" ? "All outstanding dues, fees, and institution levies have been successfully settled. Her enrollment is officially withdrawn, and her records are transferred to facilitate further admissions." : ""}
+                            ${certType === "Admission" ? "Having cleared all entry examinations and requirements, the student is officially admitted with all standard academic privileges and roles." : ""}
+                          </div>
+                        </div>
+
+                        <div class="footer">
+                          <div style="text-align: left;">
+                            <strong>Issue Date:</strong> ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
+                            <span style="font-size: 10px; color: #64748b;">Ref No: CSC/CERT/2026/${Math.floor(1000 + Math.random() * 9000)}</span>
+                          </div>
+
+                          <div class="seal-badge">OFFICIAL<br/>SEAL</div>
+
+                          <div style="text-align: right;">
+                            <div class="sig-line" style="margin-left: auto;"></div>
+                            <strong>Principal Supervisor</strong><br/>
+                            <span style="font-size: 10px; color: #64748b;">Authorized Signature</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <script>
+                        window.onload = function() {
+                          window.print();
+                        }
+                      </script>
+                    </body>
+                  </html>
+                `;
+
+                printWin.document.write(printHtml);
+                printWin.document.close();
+              }}
+              className="text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 py-3 px-8 rounded-xl flex items-center gap-2 shadow-md transition"
             >
-              <Printer className="w-4 h-4" /> Print Certificate Layout
+              <Printer className="w-4 h-4" /> Print Certificate Layout (A4 Landscape)
             </button>
           </div>
-        </div>
-      )}
-
-      {/* SUB-VIEW: Payroll Ledgers */}
-      {activeSubTab === "payroll" && !selectedPayslip && !isViewingCertificate && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-4 border border-slate-200 rounded-xl">
-            <div className="text-xs">
-              <h4 className="font-bold text-slate-800">Faculty & Staff Salaries Treasury</h4>
-              <p className="text-slate-500">Review monthly payroll structures, allowances, and tax withholding sheets.</p>
-            </div>
-            <button
-              onClick={handleProcessPayroll}
-              className="text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg"
-            >
-              Process Monthly Salaries payout
-            </button>
-          </div>
-
-          {/* Payroll List */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
-                  <th className="p-3.5">Employee Name</th>
-                  <th className="p-3.5">Designation</th>
-                  <th className="p-3.5 text-right">Basic Salary</th>
-                  <th className="p-3.5 text-right">Allowance</th>
-                  <th className="p-3.5 text-right">Deductions</th>
-                  <th className="p-3.5 text-right">Net Salary</th>
-                  <th className="p-3.5 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {payroll.map((pay) => (
-                  <tr key={pay.id} className="hover:bg-slate-50/50 transition">
-                    <td className="p-3.5 font-bold text-slate-800">{pay.employeeName}</td>
-                    <td className="p-3.5 text-[10px] uppercase font-bold text-slate-500">{pay.role}</td>
-                    <td className="p-3.5 text-right font-semibold text-slate-600">Rs. {pay.basicSalary}</td>
-                    <td className="p-3.5 text-right font-semibold text-emerald-600">+Rs. {pay.allowances}</td>
-                    <td className="p-3.5 text-right font-semibold text-red-600">-Rs. {pay.deductions}</td>
-                    <td className="p-3.5 text-right font-extrabold text-slate-800">Rs. {pay.netSalary}</td>
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => setSelectedPayslip(pay)}
-                        className="text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 py-1 px-2.5 rounded-lg transition"
-                      >
-                        Generate PaySlip
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* SUB-VIEW: Leave Requests */}
-      {activeSubTab === "leaves" && !selectedPayslip && !isViewingCertificate && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <table className="w-full text-xs text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
-                <th className="p-3.5">Applicant Name</th>
-                <th className="p-3.5">Leave Type</th>
-                <th className="p-3.5">Scheduled Duration</th>
-                <th className="p-3.5">Reason for Absence</th>
-                <th className="p-3.5">Approval Status</th>
-                <th className="p-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
-              {leaveRequests.map((req) => (
-                <tr key={req.id} className="hover:bg-slate-50/50 transition">
-                  <td className="p-3.5">
-                    <span className="block font-bold text-slate-800">{req.applicantName}</span>
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase">{req.role}</span>
-                  </td>
-                  <td className="p-3.5 font-semibold text-slate-600">{req.leaveType}</td>
-                  <td className="p-3.5 font-semibold text-slate-500">{req.startDate} to {req.endDate}</td>
-                  <td className="p-3.5 text-slate-600 italic">"{req.reason}"</td>
-                  <td className="p-3.5">
-                    <span
-                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                        req.status === "Approved"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : req.status === "Rejected"
-                          ? "bg-red-50 text-red-700 border border-red-200"
-                          : "bg-amber-50 text-amber-700 border border-amber-200"
-                      }`}
-                    >
-                      {req.status}
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-right space-x-1 whitespace-nowrap">
-                    {req.status === "Pending" ? (
-                      <>
-                        <button
-                          onClick={() => handleLeaveStatusChange(req.id, "Approved")}
-                          className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md"
-                          title="Approve"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleLeaveStatusChange(req.id, "Rejected")}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
-                          title="Reject"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <span className="text-[10px] text-slate-400 italic">Closed</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
 
       {/* SUB-VIEW: Institutional Certificates generator panel */}
-      {activeSubTab === "certificates" && !selectedPayslip && !isViewingCertificate && (
+      {!selectedPayslip && !isViewingCertificate && (
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
           <div className="border-b border-slate-100 pb-2">
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">

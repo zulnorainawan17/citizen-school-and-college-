@@ -218,26 +218,21 @@ export default function App() {
           "attendance",
           "fees",
           "exams",
-          "homework",
           "timetable",
           "generators",
-          "library",
-          "inventory",
-          "payroll",
-          "leaves",
           "ai-tools",
           "settings",
         ];
       case "Principal":
         return ["dashboard", "students", "teachers", "attendance", "fees", "exams", "ai-tools", "settings"];
       case "Teacher":
-        return ["attendance", "exams", "homework", "timetable", "leaves", "ai-tools"];
+        return ["attendance", "exams", "timetable", "ai-tools"];
       case "Accountant":
-        return ["fees", "payroll", "inventory"];
+        return ["fees"];
       case "Student":
-        return ["profile", "attendance", "exams", "homework", "timetable", "library", "ai-tools"];
+        return ["profile", "attendance", "exams", "timetable", "ai-tools"];
       case "Parent":
-        return ["child-profile", "attendance", "exams", "fees", "homework"];
+        return ["child-profile", "attendance", "exams", "fees"];
       default:
         return base;
     }
@@ -306,6 +301,7 @@ export default function App() {
             setInvoices={setInvoices}
             feeStructures={feeStructures}
             setFeeStructures={setFeeStructures}
+            schoolConfig={schoolConfig}
           />
         );
       case "exams":
@@ -316,24 +312,7 @@ export default function App() {
             setExamSchedules={setExamSchedules}
             grades={grades}
             setGrades={setGrades}
-          />
-        );
-      case "homework":
-        return (
-          <LogisticsModule
-            homework={homework}
-            setHomework={setHomework}
-            timetable={timetable}
-            setTimetable={setTimetable}
-            books={books}
-            setBooks={setBooks}
-            routes={routes}
-            setRoutes={setRoutes}
-            rooms={rooms}
-            setRooms={setRooms}
-            inventory={inventory}
-            setInventory={setInventory}
-            initialSubTab="homework"
+            schoolConfig={schoolConfig}
           />
         );
       case "timetable":
@@ -354,66 +333,6 @@ export default function App() {
             initialSubTab="timetable"
           />
         );
-      case "library":
-        return (
-          <LogisticsModule
-            homework={homework}
-            setHomework={setHomework}
-            timetable={timetable}
-            setTimetable={setTimetable}
-            books={books}
-            setBooks={setBooks}
-            routes={routes}
-            setRoutes={setRoutes}
-            rooms={rooms}
-            setRooms={setRooms}
-            inventory={inventory}
-            setInventory={setInventory}
-            initialSubTab="library"
-          />
-        );
-      case "inventory":
-        return (
-          <LogisticsModule
-            homework={homework}
-            setHomework={setHomework}
-            timetable={timetable}
-            setTimetable={setTimetable}
-            books={books}
-            setBooks={setBooks}
-            routes={routes}
-            setRoutes={setRoutes}
-            rooms={rooms}
-            setRooms={setRooms}
-            inventory={inventory}
-            setInventory={setInventory}
-            initialSubTab="inventory"
-          />
-        );
-      case "payroll":
-        return (
-          <HrAndCertificatesModule
-            teachers={teachers}
-            staff={staff}
-            leaveRequests={leaveRequests}
-            setLeaveRequests={setLeaveRequests}
-            payroll={payroll}
-            setPayroll={setPayroll}
-            initialSubTab="payroll"
-          />
-        );
-      case "leaves":
-        return (
-          <HrAndCertificatesModule
-            teachers={teachers}
-            staff={staff}
-            leaveRequests={leaveRequests}
-            setLeaveRequests={setLeaveRequests}
-            payroll={payroll}
-            setPayroll={setPayroll}
-            initialSubTab="leaves"
-          />
-        );
       case "generators":
         return (
           <HrAndCertificatesModule
@@ -424,6 +343,7 @@ export default function App() {
             payroll={payroll}
             setPayroll={setPayroll}
             initialSubTab="certificates"
+            schoolConfig={schoolConfig}
           />
         );
       case "ai-tools":

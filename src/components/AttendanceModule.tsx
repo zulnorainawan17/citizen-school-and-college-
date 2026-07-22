@@ -71,7 +71,7 @@ export function AttendanceModule({
         const newSms = {
           id: smsId,
           phone: student.guardianPhone,
-          message: `اطلاع برائے غیر حاضری: محترم سرپرست، آپ کا بچہ ${student.name} (رول نمبر: ${student.rollNo}) آج بتاریخ ${selectedDate} کو سٹیزن سکول سے غیر حاضر ہے۔ برائے مہربانی سکول انتظامیہ سے رابطہ کریں۔ / Attendance Alert: Dear Guardian, your child ${student.name} (Roll No: ${student.rollNo}) is ABSENT today ${selectedDate} from Citizen School. Please contact the administration.`,
+          message: `Attendance Alert: Dear Guardian, your child ${student.name} (Roll No: ${student.rollNo}) is ABSENT today ${selectedDate} from Citizen School. Please contact the administration.`,
           status: "Sent & Delivered ✔",
         };
         setSmsAlerts((prev) => [newSms, ...prev]);
@@ -214,7 +214,7 @@ export function AttendanceModule({
             activeSubTab === "record" ? "border-emerald-600 text-emerald-600" : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
-          Daily Haziri Register / حاضری رجسٹر
+          Daily Attendance Register
         </button>
         <button
           onClick={() => setActiveSubTab("qr-scan")}
@@ -222,7 +222,7 @@ export function AttendanceModule({
             activeSubTab === "qr-scan" ? "border-emerald-600 text-emerald-600" : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
-          Smart QR Scanner Terminal (سمارٹ سکینر)
+          Smart QR Scanner Terminal
         </button>
         <button
           onClick={() => setActiveSubTab("reports")}
@@ -230,7 +230,7 @@ export function AttendanceModule({
             activeSubTab === "reports" ? "border-emerald-600 text-emerald-600" : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
-          Haziri Analysis Reports (حاضری تجزیاتی رپورٹ)
+          Attendance Analysis Reports
         </button>
       </div>
 
@@ -240,22 +240,22 @@ export function AttendanceModule({
           {/* Controls Panel */}
           <div className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
             <div>
-              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Entity Type / حاضری کی قسم</label>
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Entity Type</label>
               <select
                 value={entityType}
                 onChange={(e) => setEntityType(e.target.value as any)}
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 focus:outline-hidden"
               >
-                <option value="student">Student Body / طلباء</option>
-                <option value="teacher">Faculty Members / اساتذہ کرام</option>
-                <option value="staff">Office Staff / عملہ</option>
+                <option value="student">Student Body</option>
+                <option value="teacher">Faculty Members</option>
+                <option value="staff">Office Staff</option>
               </select>
             </div>
 
             {entityType === "student" && (
               <>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Class / کلاس</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Class</label>
                   <select
                     value={selectedClass}
                     onChange={(e) => setSelectedClass(e.target.value)}
@@ -267,7 +267,7 @@ export function AttendanceModule({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Section / سیکشن</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Section</label>
                   <select
                     value={selectedSection}
                     onChange={(e) => setSelectedSection(e.target.value)}
@@ -282,7 +282,7 @@ export function AttendanceModule({
             )}
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Attendance Date / حاضری کی تاریخ</label>
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Attendance Date</label>
               <input
                 type="date"
                 value={selectedDate}
@@ -295,25 +295,25 @@ export function AttendanceModule({
           {/* Quick summary and bulk action */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-4 border border-slate-200 rounded-xl text-xs">
             <div className="flex items-center gap-4">
-              <span className="font-bold text-slate-700">Haziri Summary / حاضری خلاصہ:</span>
+              <span className="font-bold text-slate-700">Attendance Summary:</span>
               <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <CheckCircle className="w-3.5 h-3.5" /> {stats.presentCount} Present / حاضر
+                <CheckCircle className="w-3.5 h-3.5" /> {stats.presentCount} Present
               </span>
               <span className="text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <XCircle className="w-3.5 h-3.5" /> {stats.absentCount} Absent / غیر حاضر
+                <XCircle className="w-3.5 h-3.5" /> {stats.absentCount} Absent
               </span>
               <span className="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" /> {stats.lateCount} Late / دیر سے
+                <AlertCircle className="w-3.5 h-3.5" /> {stats.lateCount} Late
               </span>
               {stats.unrecordedCount > 0 && (
-                <span className="text-slate-500 font-semibold">{stats.unrecordedCount} Unrecorded / غیر نشانزد</span>
+                <span className="text-slate-500 font-semibold">{stats.unrecordedCount} Unrecorded</span>
               )}
             </div>
             <button
               onClick={() => handleMarkAllPresent(activeRoster)}
               className="text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 py-2 px-4 rounded-lg shadow-xs transition"
             >
-              Mark All Present / سب کو حاضر کریں
+              Mark All Present
             </button>
           </div>
 
@@ -322,10 +322,10 @@ export function AttendanceModule({
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                  <th className="p-3.5">Details / تفصیلات (Name, Father's Name, Roll No)</th>
-                  <th className="p-3.5">Admission No. / داخلہ نمبر</th>
-                  <th className="p-3.5">Haziri Date / تاریخ</th>
-                  <th className="p-3.5 text-center">Attendance Status / حاضری کی کیفیت</th>
+                  <th className="p-3.5">Details (Name, Father's Name, Roll No)</th>
+                  <th className="p-3.5">Admission No.</th>
+                  <th className="p-3.5">Attendance Date</th>
+                  <th className="p-3.5 text-center">Attendance Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -361,7 +361,7 @@ export function AttendanceModule({
                                 : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
                             }`}
                           >
-                            Present / حاضر
+                            Present
                           </button>
                           <button
                             onClick={() => handleMarkAttendance(ent.id, "Absent")}
@@ -371,7 +371,7 @@ export function AttendanceModule({
                                 : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700"
                             }`}
                           >
-                            Absent / غیر حاضر
+                            Absent
                           </button>
                           <button
                             onClick={() => handleMarkAttendance(ent.id, "Late")}
@@ -381,7 +381,7 @@ export function AttendanceModule({
                                 : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-amber-50 hover:text-amber-700"
                             }`}
                           >
-                            Late / دیر سے
+                            Late
                           </button>
                         </div>
                       </td>

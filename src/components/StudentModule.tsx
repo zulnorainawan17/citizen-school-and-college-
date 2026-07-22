@@ -663,13 +663,13 @@ export function StudentModule({
           </div>
 
           <h5 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-emerald-600" /> Custom Fee Setup / فیس اور بلنگ کی تفصیلات
+            <CreditCard className="w-4 h-4 text-emerald-600" /> Custom Fee Setup
           </h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 bg-emerald-50/20 p-4 rounded-xl border border-emerald-100">
             {/* Monthly Tuition Fee */}
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Monthly Tuition Fee (Rs.) / ماہانہ فیس *
+                Monthly Tuition Fee (Rs.) *
               </label>
               <input
                 type="number"
@@ -684,7 +684,7 @@ export function StudentModule({
             {/* Admission Fee */}
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Admission Fee (Rs.) / داخلہ فیس
+                Admission Fee (Rs.)
               </label>
               <input
                 type="number"
@@ -697,7 +697,7 @@ export function StudentModule({
             {/* Exam Fee */}
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Exam Fee (Rs.) / امتحانی فیس
+                Exam Fee (Rs.)
               </label>
               <input
                 type="number"
@@ -801,19 +801,19 @@ export function StudentModule({
           {/* Custom Fee Rates Block */}
           <div className="bg-emerald-50/40 border border-emerald-100 rounded-xl p-4 text-xs space-y-2">
             <h5 className="font-bold text-emerald-800 flex items-center gap-1.5">
-              <CreditCard className="w-4 h-4 text-emerald-600" /> Student Fee Rates & Billing Setup / فیس اور بلنگ کی تفصیلات
+              <CreditCard className="w-4 h-4 text-emerald-600" /> Student Fee Rates & Billing Setup
             </h5>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               <div className="bg-white p-3 rounded-lg border border-emerald-100">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Monthly Tuition Fee / ماہانہ فیس</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Monthly Tuition Fee</span>
                 <p className="text-sm font-extrabold text-emerald-700 mt-0.5">Rs. {selectedStudent.monthlyFee !== undefined ? selectedStudent.monthlyFee : getClassDefaultFees(selectedStudent.class).monthlyFee}</p>
               </div>
               <div className="bg-white p-3 rounded-lg border border-emerald-100">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Admission Fee / داخلہ فیس</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Admission Fee</span>
                 <p className="text-sm font-extrabold text-slate-700 mt-0.5">Rs. {selectedStudent.admissionFee !== undefined ? selectedStudent.admissionFee : getClassDefaultFees(selectedStudent.class).admissionFee}</p>
               </div>
               <div className="bg-white p-3 rounded-lg border border-emerald-100">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Exam Fee / امتحانی فیس</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400">Exam Fee</span>
                 <p className="text-sm font-extrabold text-slate-700 mt-0.5">Rs. {selectedStudent.examFee !== undefined ? selectedStudent.examFee : getClassDefaultFees(selectedStudent.class).examFee}</p>
               </div>
             </div>
@@ -853,6 +853,29 @@ export function StudentModule({
       {/* VIEW: Printable Student ID Card */}
       {viewMode === "id-card" && selectedStudent && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6">
+          {/* Embedded Print CSS to print ONLY the ID card and hide all other app elements */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media print {
+              body * {
+                visibility: hidden !important;
+              }
+              #student-id-card-print-area, #student-id-card-print-area * {
+                visibility: visible !important;
+              }
+              #student-id-card-print-area {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 2rem !important;
+                justify-content: center !important;
+                align-items: center !important;
+              }
+            }
+          `}} />
+
           {/* Header Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
@@ -889,7 +912,16 @@ export function StudentModule({
 
               {/* Print Button */}
               <button
-                onClick={() => window.print()}
+                onClick={() => {
+                  if (idCardLayout !== "side-by-side") {
+                    setIdCardLayout("side-by-side");
+                    setTimeout(() => {
+                      window.print();
+                    }, 200);
+                  } else {
+                    window.print();
+                  }
+                }}
                 className="text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 py-1.5 px-4 rounded-lg border border-emerald-800 transition flex items-center gap-1.5"
               >
                 <Printer className="w-3.5 h-3.5" /> Print Card
@@ -933,10 +965,10 @@ export function StudentModule({
                         </h4>
                       </div>
                       <div className="text-[7px] text-white/75 uppercase tracking-widest font-bold">
-                        Govt. Registered / گورنمنٹ سے رجسٹرڈ
+                        Govt. Registered
                       </div>
                       <div className="mt-1.5 bg-amber-400/90 text-slate-950 font-sans font-black text-[9px] py-0.5 px-3 rounded-full inline-block uppercase tracking-wider">
-                        STUDENT IDENTITY CARD • سٹوڈنٹ کارڈ
+                        STUDENT IDENTITY CARD
                       </div>
                     </div>
 
@@ -1033,11 +1065,11 @@ export function StudentModule({
                       {/* Instructions */}
                       <div className="space-y-1">
                         <span className="block text-[8px] uppercase tracking-wider text-amber-400 font-extrabold">
-                          Rules & Instructions / قواعد و ضوابط
+                          Rules & Instructions
                         </span>
                         <ul className="text-[8px] text-slate-300 list-disc list-inside space-y-0.5 leading-relaxed">
                           <li>This card must be worn and displayed inside the school premises.</li>
-                          <li>گمشدگی کی صورت میں فوراً مطلع کریں اور نیا کارڈ بنوائیں۔</li>
+                          <li>In case of loss, notify immediately to get a replacement card.</li>
                           <li>This card is non-transferable and remains school property.</li>
                           <li>If found, please return to the school administration office.</li>
                         </ul>
@@ -1046,7 +1078,7 @@ export function StudentModule({
                       {/* Address detail */}
                       <div className="space-y-1 bg-white/5 p-2.5 rounded-lg border border-white/5">
                         <span className="text-[8px] text-amber-400 font-bold uppercase block">
-                          Residential Address / رہائشی پتہ
+                          Residential Address
                         </span>
                         <p className="text-[9px] text-slate-100 font-semibold leading-relaxed">
                           {selectedStudent.address || "N/A"}
@@ -1114,10 +1146,10 @@ export function StudentModule({
                     </h4>
                   </div>
                   <div className="text-[7px] text-white/75 uppercase tracking-widest font-bold">
-                    Govt. Registered / گورنمنٹ سے رجسٹرڈ
+                    Govt. Registered
                   </div>
                   <div className="mt-1.5 bg-amber-400/90 text-slate-950 font-sans font-black text-[9px] py-0.5 px-3 rounded-full inline-block uppercase tracking-wider">
-                    STUDENT IDENTITY CARD • سٹوڈنٹ کارڈ
+                    STUDENT IDENTITY CARD
                   </div>
                 </div>
 
@@ -1203,11 +1235,11 @@ export function StudentModule({
                   {/* Instructions */}
                   <div className="space-y-1">
                     <span className="block text-[8px] uppercase tracking-wider text-amber-400 font-extrabold">
-                      Rules & Instructions / قواعد و ضوابط
+                      Rules & Instructions
                     </span>
                     <ul className="text-[8px] text-slate-300 list-disc list-inside space-y-0.5 leading-relaxed">
                       <li>This card must be worn and displayed inside the school premises.</li>
-                      <li>گمشدگی کی صورت میں فوراً مطلع کریں اور نیا کارڈ بنوائیں۔</li>
+                      <li>In case of loss, notify immediately to get a replacement card.</li>
                       <li>This card is non-transferable and remains school property.</li>
                       <li>If found, please return to the school administration office.</li>
                     </ul>
@@ -1216,7 +1248,7 @@ export function StudentModule({
                   {/* Address detail */}
                   <div className="space-y-1 bg-white/5 p-2.5 rounded-lg border border-white/5">
                     <span className="text-[8px] text-amber-400 font-bold uppercase block">
-                      Residential Address / رہائشی پتہ
+                      Residential Address
                     </span>
                     <p className="text-[9px] text-slate-100 font-semibold leading-relaxed">
                       {selectedStudent.address || "N/A"}

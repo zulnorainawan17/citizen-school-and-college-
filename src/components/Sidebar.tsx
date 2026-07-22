@@ -57,13 +57,8 @@ export function Sidebar({
       { id: "attendance", label: "Attendance", icon: UserCheck },
       { id: "fees", label: "Fees & Invoices", icon: CreditCard },
       { id: "exams", label: "Exams & Marks", icon: ClipboardList },
-      { id: "homework", label: "Homework", icon: BookOpen },
       { id: "timetable", label: "Timetable", icon: Calendar },
       { id: "generators", label: "ID & Certificates", icon: FileText },
-      { id: "library", label: "Library", icon: Library },
-      { id: "inventory", label: "Inventory", icon: Package },
-      { id: "payroll", label: "Payroll", icon: CreditCard },
-      { id: "leaves", label: "Leave Requests", icon: BookMarked },
       { id: "ai-tools", label: "AI Tools", icon: Sparkles },
       { id: "settings", label: "Settings", icon: Settings },
     ];
@@ -81,25 +76,19 @@ export function Sidebar({
     const teacherItems = [
       { id: "attendance", label: "Record Attendance", icon: UserCheck },
       { id: "exams", label: "Marks Entry", icon: ClipboardList },
-      { id: "homework", label: "Homework", icon: BookOpen },
       { id: "timetable", label: "My Routine", icon: Calendar },
-      { id: "leaves", label: "My Leaves", icon: BookMarked },
       { id: "ai-tools", label: "AI Tools", icon: Sparkles },
     ];
 
     const accountantItems = [
       { id: "fees", label: "Fee Collection", icon: CreditCard },
-      { id: "payroll", label: "Payroll Manager", icon: FileText },
-      { id: "inventory", label: "Assets & Stocks", icon: Package },
     ];
 
     const studentItems = [
       { id: "profile", label: "My Profile", icon: Users },
       { id: "attendance", label: "My Attendance", icon: UserCheck },
       { id: "exams", label: "My Results", icon: ClipboardList },
-      { id: "homework", label: "My Homework", icon: BookOpen },
       { id: "timetable", label: "My Timetable", icon: Calendar },
-      { id: "library", label: "Library Books", icon: Library },
       { id: "ai-tools", label: "AI Tutor Chat", icon: Sparkles },
     ];
 
@@ -108,7 +97,6 @@ export function Sidebar({
       { id: "attendance", label: "Child Attendance", icon: UserCheck },
       { id: "exams", label: "Child Results", icon: ClipboardList },
       { id: "fees", label: "Outstanding Fees", icon: CreditCard },
-      { id: "homework", label: "Child Homework", icon: BookOpen },
     ];
 
     switch (activeRole) {
