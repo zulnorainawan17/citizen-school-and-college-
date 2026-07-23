@@ -30,7 +30,7 @@ export const initialSchoolConfig: SchoolConfig = {
   address: "Main Boulevard, DHA Phase 5, Lahore, Pakistan",
   academicYear: "2026-2027",
   currentSemester: "First Term",
-  logoUrl: "",
+  logoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
   primaryColor: "#059669",
 };
 
@@ -51,7 +51,7 @@ export const initialStudents: Student[] = [
     address: "Block C-3, Gulberg, Lahore",
     admissionDate: "2025-01-10",
     medicalRecord: "No known allergies. Asthma inhaler in backpack.",
-    photoUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
     status: "Active",
   },
   {
@@ -70,7 +70,7 @@ export const initialStudents: Student[] = [
     address: "Street 4, Sector G-11, Islamabad",
     admissionDate: "2025-01-12",
     medicalRecord: "Allergic to peanuts.",
-    photoUrl: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
     status: "Active",
   },
   {
@@ -89,7 +89,7 @@ export const initialStudents: Student[] = [
     address: "Phase 5, DHA, Karachi",
     admissionDate: "2025-01-15",
     medicalRecord: "None",
-    photoUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1xMBdFuGXz4qc5uSm5ev8Z5MSrxORwgB4=s1000",
     status: "Active",
   },
   {
@@ -108,7 +108,7 @@ export const initialStudents: Student[] = [
     address: "Wapda Town, Gujranwala",
     admissionDate: "2024-08-15",
     medicalRecord: "Wears corrective glasses for distant vision.",
-    photoUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
     status: "Active",
   },
   {
@@ -127,7 +127,7 @@ export const initialStudents: Student[] = [
     address: "Saddar Town, Peshawar",
     admissionDate: "2024-08-15",
     medicalRecord: "None",
-    photoUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
     status: "Active",
   },
   {
@@ -146,7 +146,7 @@ export const initialStudents: Student[] = [
     address: "Johar Town, Lahore",
     admissionDate: "2026-04-10",
     medicalRecord: "None",
-    photoUrl: "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1xMBdFuGXz4qc5uSm5ev8Z5MSrxORwgB4=s1000",
     status: "Active",
   },
   {
@@ -165,7 +165,7 @@ export const initialStudents: Student[] = [
     address: "Bahria Town, Rawalpindi",
     admissionDate: "2026-04-12",
     medicalRecord: "None",
-    photoUrl: "https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
     status: "Active",
   },
   {
@@ -184,7 +184,7 @@ export const initialStudents: Student[] = [
     address: "Clifton, Karachi",
     admissionDate: "2024-08-15",
     medicalRecord: "Wears contact lenses.",
-    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
     status: "Active",
   }
 ];
@@ -202,7 +202,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1983-05-14",
     joiningDate: "2018-08-01",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1xMBdFuGXz4qc5uSm5ev8Z5MSrxORwgB4=s1000",
   },
   {
     id: "TCH002",
@@ -216,7 +216,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1994-03-12",
     joiningDate: "2021-02-15",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
   },
   {
     id: "TCH003",
@@ -230,7 +230,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1978-02-18",
     joiningDate: "2016-08-20",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
   },
   {
     id: "TCH004",
@@ -244,7 +244,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1988-07-25",
     joiningDate: "2019-09-01",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1xMBdFuGXz4qc5uSm5ev8Z5MSrxORwgB4=s1000",
   },
   {
     id: "TCH005",
@@ -258,7 +258,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1992-11-05",
     joiningDate: "2022-04-10",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
   },
   {
     id: "TCH006",
@@ -272,7 +272,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1985-08-20",
     joiningDate: "2017-03-18",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
   },
   {
     id: "TCH007",
@@ -286,7 +286,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1990-12-11",
     joiningDate: "2020-11-01",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1xMBdFuGXz4qc5uSm5ev8Z5MSrxORwgB4=s1000",
   },
   {
     id: "TCH008",
@@ -300,7 +300,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1989-10-23",
     joiningDate: "2020-01-15",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
   },
   {
     id: "TCH009",
@@ -314,7 +314,7 @@ export const initialTeachers: Teacher[] = [
     dob: "1981-06-15",
     joiningDate: "2015-04-01",
     status: "Active",
-    photoUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=150&h=150&fit=crop",
+    photoUrl: "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
   }
 ];
 

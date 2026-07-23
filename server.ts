@@ -36,17 +36,32 @@ function getGeminiClient(): GoogleGenAI {
 // Gemini API proxy endpoint
 app.post("/api/gemini", async (req, res) => {
   try {
-    const { prompt, systemInstruction, model } = req.body;
+    const { prompt, systemInstruction, model, image } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: "Missing required parameter: prompt" });
     }
 
     const ai = getGeminiClient();
-    const modelToUse = model || "gemini-3.5-flash";
+    const modelToUse = model || "gemini-2.5-flash";
+
+    let contents: any = prompt;
+    if (image && image.data && image.mimeType) {
+      contents = [
+        {
+          text: prompt,
+        },
+        {
+          inlineData: {
+            mimeType: image.mimeType,
+            data: image.data,
+          },
+        },
+      ];
+    }
 
     const response = await ai.models.generateContent({
       model: modelToUse,
-      contents: prompt,
+      contents,
       config: systemInstruction
         ? {
             systemInstruction,

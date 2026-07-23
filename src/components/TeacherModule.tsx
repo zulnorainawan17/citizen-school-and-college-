@@ -23,6 +23,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
   // Navigation states: 'list', 'register', 'edit', 'profile', 'id-card'
   const [viewMode, setViewMode] = useState<"list" | "register" | "edit" | "profile" | "id-card">("list");
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null);
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +58,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
       dob: "1990-01-01",
       joiningDate: new Date().toISOString().split("T")[0],
       status: "Active",
-      photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop",
+      photoUrl: "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
     });
     setFormErrors("");
     setViewMode("register");
@@ -80,9 +81,18 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
     setViewMode("id-card");
   };
 
-  const handleDeleteTeacher = (id: string) => {
-    if (confirm(`Are you sure you want to remove teacher ${id}?`)) {
-      setTeachers(teachers.filter((t) => t.id !== id));
+  const handleDeleteTeacher = (teacher: Teacher) => {
+    setDeletingTeacher(teacher);
+  };
+
+  const handleConfirmDeleteTeacher = () => {
+    if (deletingTeacher) {
+      setTeachers((prev) => prev.filter((t) => t.id !== deletingTeacher.id));
+      if (selectedTeacher?.id === deletingTeacher.id) {
+        setSelectedTeacher(null);
+        setViewMode("list");
+      }
+      setDeletingTeacher(null);
     }
   };
 
@@ -107,7 +117,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
         dob: formData.dob || "1990-01-01",
         joiningDate: formData.joiningDate || new Date().toISOString().split("T")[0],
         status: "Active",
-        photoUrl: formData.photoUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop",
+        photoUrl: formData.photoUrl || "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
       };
       setTeachers([...teachers, newTeacher]);
     } else {
@@ -197,7 +207,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
                   {/* Photo & Role */}
                   <div className="flex items-center gap-3">
                     <img
-                      src={t.photoUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop"}
+                      src={t.photoUrl || "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000"}
                       alt={t.name}
                       className="w-12 h-12 rounded-full object-cover border border-slate-200"
                     />
@@ -252,7 +262,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
                       <Edit className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleDeleteTeacher(t.id)}
+                      onClick={() => handleDeleteTeacher(t)}
                       className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
                       title="Delete"
                     >
@@ -376,7 +386,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
                 type="text"
                 value={formData.photoUrl || ""}
                 onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                placeholder="https://images.unsplash.com/..."
+                placeholder="https://lh3.googleusercontent.com/d/..."
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 focus:outline-hidden"
               />
             </div>
@@ -405,7 +415,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-6">
           <div className="flex flex-col sm:flex-row items-center gap-5 pb-5 border-b border-slate-100">
             <img
-              src={selectedTeacher.photoUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop"}
+              src={selectedTeacher.photoUrl || "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000"}
               alt={selectedTeacher.name}
               className="w-24 h-24 rounded-full object-cover border-2 border-blue-100 shadow-sm"
             />
@@ -461,6 +471,29 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
               </div>
             </div>
           </div>
+
+          {/* Actions for faculty */}
+          <div className="flex flex-wrap gap-2.5 justify-end border-t border-slate-100 pt-4">
+            <button
+              onClick={() => handleEditClick(selectedTeacher)}
+              className="text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-lg flex items-center gap-1 transition"
+            >
+              <Edit className="w-4 h-4" /> Edit Profile
+            </button>
+            <button
+              onClick={() => handleViewIdCard(selectedTeacher)}
+              className="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-lg flex items-center gap-1 transition"
+            >
+              <CreditCard className="w-4 h-4" /> Generate ID Card
+            </button>
+            <button
+              onClick={() => handleDeleteTeacher(selectedTeacher)}
+              className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3.5 py-2 rounded-lg flex items-center gap-1 transition"
+              title="Delete Faculty Record"
+            >
+              <Trash2 className="w-4 h-4" /> Delete Faculty Record
+            </button>
+          </div>
         </div>
       )}
 
@@ -488,7 +521,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
             {/* Middle body */}
             <div className="p-5 flex-1 flex flex-col items-center justify-center space-y-4">
               <img
-                src={selectedTeacher.photoUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop"}
+                src={selectedTeacher.photoUrl || "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000"}
                 alt={selectedTeacher.name}
                 className="w-24 h-24 rounded-full object-cover border-4 border-slate-800 shadow-sm"
               />
@@ -536,6 +569,40 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
             >
               Print ID Card Layout
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingTeacher && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full border border-slate-200 shadow-xl space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Delete Faculty Member</h3>
+                <p className="text-xs text-slate-500">This record will be permanently deleted</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
+              Are you sure you want to delete <strong>{deletingTeacher.name}</strong> (ID: {deletingTeacher.id}, {deletingTeacher.department} Dept)?
+            </p>
+            <div className="flex gap-2.5 justify-end pt-2">
+              <button
+                onClick={() => setDeletingTeacher(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDeleteTeacher}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-xs"
+              >
+                Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

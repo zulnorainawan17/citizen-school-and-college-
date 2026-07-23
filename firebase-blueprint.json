@@ -1,0 +1,21 @@
+{
+  "entities": {
+    "exam_papers": {
+      "title": "Exam Papers",
+      "description": "Composed and generated school examination papers saved in Firestore database",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "examTitle": { "type": "string" },
+        "subject": { "type": "string" },
+        "grade": { "type": "string" },
+        "timeAllowed": { "type": "string" },
+        "maxMarks": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["schoolName", "examTitle", "subject", "grade", "content"]
+    }
+  }
+}

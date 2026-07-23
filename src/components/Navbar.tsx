@@ -9,8 +9,10 @@ import {
   ChevronDown,
   Info,
   Layers,
+  LogOut,
 } from "lucide-react";
 import { SchoolConfig } from "../types";
+import { User as FirebaseUser } from "firebase/auth";
 
 interface NavbarProps {
   activeRole: "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent";
@@ -18,6 +20,8 @@ interface NavbarProps {
   schoolConfig: SchoolConfig;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  authUser?: FirebaseUser | null;
+  handleLogout?: () => void;
 }
 
 export function Navbar({
@@ -26,6 +30,8 @@ export function Navbar({
   schoolConfig,
   collapsed,
   setCollapsed,
+  authUser,
+  handleLogout,
 }: NavbarProps) {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
@@ -56,7 +62,15 @@ export function Navbar({
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+        <div className="flex items-center gap-2.5">
+          {schoolConfig.logoUrl && (
+            <img
+              src={schoolConfig.logoUrl}
+              alt="School Logo"
+              className="w-7 h-7 rounded-full object-cover border border-brand-accent/40 shadow-xs"
+              referrerPolicy="no-referrer"
+            />
+          )}
           <h2 className="font-serif font-medium text-brand-sidebar text-base md:text-lg leading-tight truncate">
             {schoolConfig.schoolName}
           </h2>
@@ -154,14 +168,31 @@ export function Navbar({
         </div>
 
         {/* Quick User Badge */}
-        <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
-          <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs uppercase shadow-inner">
-            <User className="w-4 h-4 text-slate-500" />
+        <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
+          <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs uppercase shadow-xs shrink-0">
+            {authUser?.displayName
+              ? authUser.displayName.charAt(0)
+              : authUser?.email
+              ? authUser.email.charAt(0).toUpperCase()
+              : <User className="w-4 h-4 text-slate-500" />}
           </div>
           <div className="hidden md:block text-left">
-            <span className="block text-xs font-bold text-slate-800">Admin Staff</span>
-            <span className="block text-[10px] text-slate-400 font-semibold">Active Session</span>
+            <span className="block text-xs font-bold text-slate-800 truncate max-w-[140px]" title={authUser?.email || activeRole}>
+              {authUser?.displayName || authUser?.email || `${activeRole} User`}
+            </span>
+            <span className="block text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Firebase Auth Active
+            </span>
           </div>
+          {handleLogout && (
+            <button
+              onClick={handleLogout}
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer ml-1"
+              title="Logout from Firebase Auth Session"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </header>

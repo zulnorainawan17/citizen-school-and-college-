@@ -1825,7 +1825,7 @@ export function ResultManagementModule({
                           type="button"
                           onClick={() => {
                             // Demo Hard Copy Sheet URL
-                            setHardCopyPreviewUrl("https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&auto=format&fit=crop&q=80");
+                            setHardCopyPreviewUrl("https://lh3.googleusercontent.com/d/1xMBdFuGXz4qc5uSm5ev8Z5MSrxORwgB4=s1000");
                           }}
                           className="text-xs font-bold text-emerald-800 bg-white border border-emerald-300 px-3.5 py-1.5 rounded-xl hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-2xs"
                         >

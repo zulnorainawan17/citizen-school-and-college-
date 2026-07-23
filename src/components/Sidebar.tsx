@@ -140,9 +140,18 @@ export function Sidebar({
         <div className="p-4 flex items-center justify-between border-b border-brand-accent/20 h-16 bg-brand-sidebar/95">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <div className="bg-brand-accent text-brand-sidebar p-1.5 rounded-lg">
-                <Compass className="w-5 h-5" id="brand-icon" />
-              </div>
+              {schoolConfig?.logoUrl ? (
+                <img
+                  src={schoolConfig.logoUrl}
+                  alt="Logo"
+                  className="w-8 h-8 rounded-lg object-cover border border-white/20 shadow-xs"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="bg-brand-accent text-brand-sidebar p-1.5 rounded-lg">
+                  <Compass className="w-5 h-5" id="brand-icon" />
+                </div>
+              )}
               <div>
                 <span className="font-serif italic font-medium text-white tracking-wide text-lg block truncate max-w-[150px]" title={schoolConfig?.schoolName || "Citizen School"}>
                   {schoolConfig?.schoolName || "Citizen School"}
@@ -154,9 +163,18 @@ export function Sidebar({
             </div>
           )}
           {collapsed && (
-            <div className="mx-auto bg-brand-accent text-brand-sidebar p-1.5 rounded-lg">
-              <Compass className="w-5 h-5" id="brand-icon-collapsed" />
-            </div>
+            schoolConfig?.logoUrl ? (
+              <img
+                src={schoolConfig.logoUrl}
+                alt="Logo"
+                className="w-7 h-7 mx-auto rounded-lg object-cover border border-white/20 shadow-xs"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="mx-auto bg-brand-accent text-brand-sidebar p-1.5 rounded-lg">
+                <Compass className="w-5 h-5" id="brand-icon-collapsed" />
+              </div>
+            )
           )}
           
           {/* Close button for Mobile */}

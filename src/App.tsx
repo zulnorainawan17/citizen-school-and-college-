@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { auth } from "./lib/firebase";
+import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import { LoginView } from "./components/LoginView";
 import { Sidebar } from "./components/Sidebar";
 import { Navbar } from "./components/Navbar";
@@ -121,9 +123,23 @@ const THEME_PRESETS: ThemePreset[] = [
 ];
 
 export default function App() {
+  const [authUser, setAuthUser] = useState<FirebaseUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem("erp_authenticated") === "true";
   });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthUser(user);
+        setIsAuthenticated(true);
+        localStorage.setItem("erp_authenticated", "true");
+      } else {
+        setAuthUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const [activeRole, setActiveRole] = useState<
     "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent"
@@ -152,10 +168,54 @@ export default function App() {
     return initialSchoolConfig;
   });
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [students, setStudents] = useState<Student[]>(initialStudents);
-  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
+  const [students, setStudents] = useState<Student[]>(() => {
+    const saved = localStorage.getItem("erp_students");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return initialStudents;
+      }
+    }
+    return initialStudents;
+  });
+
+  const [teachers, setTeachers] = useState<Teacher[]>(() => {
+    const saved = localStorage.getItem("erp_teachers");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return initialTeachers;
+      }
+    }
+    return initialTeachers;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("erp_students", JSON.stringify(students));
+  }, [students]);
+
+  useEffect(() => {
+    localStorage.setItem("erp_teachers", JSON.stringify(teachers));
+  }, [teachers]);
+
   const [staff, setStaff] = useState<Staff[]>(initialStaff);
-  const [invoices, setInvoices] = useState<FeeInvoice[]>(initialFeeInvoices);
+  const [invoices, setInvoices] = useState<FeeInvoice[]>(() => {
+    const saved = localStorage.getItem("erp_invoices");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return initialFeeInvoices;
+      }
+    }
+    return initialFeeInvoices;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("erp_invoices", JSON.stringify(invoices));
+  }, [invoices]);
   const [feeStructures, setFeeStructures] = useState<FeeStructure[]>(initialFeeStructures);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>(initialAttendance);
   const [examSchedules, setExamSchedules] = useState<ExamSchedule[]>(initialExamSchedules);
@@ -250,8 +310,14 @@ export default function App() {
     setActiveTab(allowed[0] || "dashboard");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.warn("SignOut notice:", e);
+    }
     setIsAuthenticated(false);
+    setAuthUser(null);
     localStorage.removeItem("erp_authenticated");
     localStorage.removeItem("erp_role");
   };
@@ -266,7 +332,9 @@ export default function App() {
             staff={staff}
             invoices={invoices}
             holidays={holidays}
+            grades={grades}
             activeRole={activeRole}
+            setActiveTab={setActiveTab}
           />
         );
       case "students":
@@ -555,6 +623,8 @@ export default function App() {
               schoolConfig={schoolConfig}
               collapsed={collapsed}
               setCollapsed={setCollapsed}
+              authUser={authUser}
+              handleLogout={handleLogout}
             />
             <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-brand-bg relative">
               <AnimatePresence mode="wait">

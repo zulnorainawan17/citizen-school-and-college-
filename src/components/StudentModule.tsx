@@ -38,6 +38,7 @@ export function StudentModule({
   // Navigation states: 'list', 'create', 'edit', 'profile', 'id-card'
   const [viewMode, setViewMode] = useState<"list" | "create" | "edit" | "profile" | "id-card">("list");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
   const [idCardLayout, setIdCardLayout] = useState<"interactive" | "side-by-side">("interactive");
 
@@ -93,7 +94,7 @@ export function StudentModule({
       emergencyContact: "",
       address: "",
       medicalRecord: "None",
-      photoUrl: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop",
+      photoUrl: "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
       status: "Active",
       monthlyFee: defaultFees.monthlyFee,
       admissionFee: defaultFees.admissionFee,
@@ -126,9 +127,18 @@ export function StudentModule({
     setViewMode("id-card");
   };
 
-  const handleDeleteStudent = (studentId: string) => {
-    if (confirm(`Are you certain you want to remove the record for student ${studentId}?`)) {
-      setStudents(students.filter((s) => s.id !== studentId));
+  const handleDeleteStudent = (student: Student) => {
+    setDeletingStudent(student);
+  };
+
+  const handleConfirmDeleteStudent = () => {
+    if (deletingStudent) {
+      setStudents((prev) => prev.filter((s) => s.id !== deletingStudent.id));
+      if (selectedStudent?.id === deletingStudent.id) {
+        setSelectedStudent(null);
+        setViewMode("list");
+      }
+      setDeletingStudent(null);
     }
   };
 
@@ -191,7 +201,7 @@ export function StudentModule({
         address: formData.address || "",
         admissionDate: new Date().toISOString().split("T")[0],
         medicalRecord: formData.medicalRecord || "None",
-        photoUrl: formData.photoUrl || "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop",
+        photoUrl: formData.photoUrl || "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000",
         status: "Active",
         monthlyFee: mFee,
         admissionFee: aFee,
@@ -361,7 +371,7 @@ export function StudentModule({
                         <td className="p-3.5">
                           <div className="flex items-center gap-3">
                             <img
-                              src={s.photoUrl || "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop"}
+                              src={s.photoUrl || "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000"}
                               alt={s.name}
                               className="w-10 h-10 rounded-full object-cover border border-slate-200"
                             />
@@ -425,7 +435,7 @@ export function StudentModule({
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteStudent(s.id)}
+                            onClick={() => handleDeleteStudent(s)}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
                             title="Delete"
                           >
@@ -571,7 +581,7 @@ export function StudentModule({
                 type="text"
                 value={formData.photoUrl || ""}
                 onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                placeholder="https://images.unsplash.com/..."
+                placeholder="https://lh3.googleusercontent.com/d/..."
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 focus:outline-hidden"
               />
             </div>
@@ -732,7 +742,7 @@ export function StudentModule({
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-6">
           <div className="flex flex-col sm:flex-row items-center gap-5 pb-5 border-b border-slate-100">
             <img
-              src={selectedStudent.photoUrl || "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop"}
+              src={selectedStudent.photoUrl || "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000"}
               alt={selectedStudent.name}
               className="w-24 h-24 rounded-full object-cover border-2 border-blue-100 shadow-sm"
             />
@@ -842,9 +852,16 @@ export function StudentModule({
             </button>
             <button
               onClick={() => handleWithdrawStudent(selectedStudent.id)}
-              className="text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-2 rounded-lg flex items-center gap-1"
+              className="text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-3.5 py-2 rounded-lg flex items-center gap-1"
             >
               <UserX className="w-4 h-4" /> Withdraw Admission
+            </button>
+            <button
+              onClick={() => handleDeleteStudent(selectedStudent)}
+              className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3.5 py-2 rounded-lg flex items-center gap-1 transition"
+              title="Delete Student Record"
+            >
+              <Trash2 className="w-4 h-4" /> Delete Student
             </button>
           </div>
         </div>
@@ -978,7 +995,7 @@ export function StudentModule({
                       <div className="relative group">
                         <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-emerald-500 rounded-full blur-xs opacity-75"></div>
                         <img
-                          src={selectedStudent.photoUrl || "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop"}
+                          src={selectedStudent.photoUrl || "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000"}
                           alt={selectedStudent.name}
                           className="relative w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
                         />
@@ -1055,7 +1072,7 @@ export function StudentModule({
                       {/* Security Watermark Ghost Image */}
                       <div className="absolute right-3 top-3 opacity-15 grayscale pointer-events-none">
                         <img
-                          src={selectedStudent.photoUrl || "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop"}
+                          src={selectedStudent.photoUrl || "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000"}
                           alt="watermark"
                           className="w-16 h-16 rounded-lg object-cover filter contrast-125"
                         />
@@ -1158,7 +1175,7 @@ export function StudentModule({
                   {/* Photo Container */}
                   <div className="relative">
                     <img
-                      src={selectedStudent.photoUrl || "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop"}
+                      src={selectedStudent.photoUrl || "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000"}
                       alt={selectedStudent.name}
                       className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
                     />
@@ -1226,7 +1243,7 @@ export function StudentModule({
                 <div className="p-4 flex-1 flex flex-col justify-between text-left space-y-3 relative">
                   <div className="absolute right-3 top-3 opacity-15 grayscale pointer-events-none">
                     <img
-                      src={selectedStudent.photoUrl || "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&h=150&fit=crop"}
+                      src={selectedStudent.photoUrl || "https://lh3.googleusercontent.com/d/1-_jJ_MDjlqHD4TCt9wKomGUm5H4gNijc=s1000"}
                       alt="watermark"
                       className="w-16 h-16 rounded-lg object-cover filter contrast-125"
                     />
@@ -1301,6 +1318,40 @@ export function StudentModule({
             >
               Back to Students List
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingStudent && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full border border-slate-200 shadow-xl space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Delete Student Record</h3>
+                <p className="text-xs text-slate-500">This action will remove the student permanently</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
+              Are you sure you want to delete <strong>{deletingStudent.name}</strong> (ID: {deletingStudent.id}, {deletingStudent.class}-{deletingStudent.section})?
+            </p>
+            <div className="flex gap-2.5 justify-end pt-2">
+              <button
+                onClick={() => setDeletingStudent(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDeleteStudent}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-xs"
+              >
+                Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
