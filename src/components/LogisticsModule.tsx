@@ -20,7 +20,7 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
-import { Homework, TimetableItem, LibraryBook, TransportRoute, HostelRoom, InventoryItem, GRADE_LEVELS, Teacher } from "../types";
+import { Homework, TimetableItem, LibraryBook, TransportRoute, HostelRoom, InventoryItem, GRADE_LEVELS, Teacher, Student } from "../types";
 import { saveHomework, deleteHomework, saveBook, deleteBook, saveTransportRoute, deleteTransportRoute, saveHostelRoom, deleteHostelRoom, saveInventoryItem, deleteInventoryItem } from "../lib/firestoreService";
 
 interface LogisticsModuleProps {
@@ -37,6 +37,8 @@ interface LogisticsModuleProps {
   inventory: InventoryItem[];
   setInventory: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
   initialSubTab?: "timetable" | "library" | "inventory";
+  activeRole?: string;
+  loggedInUser?: Student | Teacher | null;
 }
 
 // Standard Pakistani School Time Slots Definition
@@ -93,7 +95,13 @@ export function LogisticsModule({
   inventory,
   setInventory,
   initialSubTab = "timetable",
+  activeRole,
+  loggedInUser,
 }: LogisticsModuleProps) {
+  // Access control permissions
+  const isReadOnlyRole = activeRole === "Teacher" || activeRole === "Student" || activeRole === "Parent";
+  const isTeacherRole = activeRole === "Teacher";
+
   // If explicitly accessed as library or inventory from legacy routes
   const [activeSubTab, setActiveSubTab] = useState<"timetable" | "library" | "inventory">(initialSubTab);
 
@@ -102,6 +110,15 @@ export function LogisticsModule({
       setActiveSubTab(initialSubTab);
     }
   }, [initialSubTab]);
+
+  // Timetable View Mode ("class_matrix" for class-wise, "my_schedule" for teacher's own schedule)
+  const [timetableViewMode, setTimetableViewMode] = useState<"class_matrix" | "my_schedule">(
+    isTeacherRole ? "my_schedule" : "class_matrix"
+  );
+
+  // Default teacher name for filtering
+  const defaultTeacherName = (loggedInUser && "name" in loggedInUser) ? loggedInUser.name : "Dr. Kamran Malik";
+  const [selectedTeacherName, setSelectedTeacherName] = useState<string>(defaultTeacherName);
 
   // Timetable State
   const [selectedClass, setSelectedClass] = useState<string>("Class 10");
@@ -377,272 +394,428 @@ export function LogisticsModule({
 
         {/* Header Quick Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleAutoFillPakistaniRoutine}
-            className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-2xs"
-          >
-            <Sparkles className="w-4 h-4 text-emerald-600" /> Auto-Fill Pakistani Class Routine
-          </button>
-          
-          <button
-            onClick={() => setIsEditorOpen(true)}
-            className="text-xs font-bold text-slate-800 bg-slate-100 border border-slate-200 hover:bg-slate-200 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-2xs"
-          >
-            <Plus className="w-4 h-4 text-slate-700" /> Add / Edit Period
-          </button>
+          {!isReadOnlyRole && (
+            <>
+              <button
+                onClick={handleAutoFillPakistaniRoutine}
+                className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-600" /> Auto-Fill Pakistani Class Routine
+              </button>
+              
+              <button
+                onClick={() => setIsEditorOpen(true)}
+                className="text-xs font-bold text-slate-800 bg-slate-100 border border-slate-200 hover:bg-slate-200 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-slate-700" /> Add / Edit Period
+              </button>
+            </>
+          )}
 
           <button
             onClick={handlePrintTimetable}
-            className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-1.5"
+            className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl transition shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
             <Printer className="w-4 h-4" /> Print Class Routine (A4)
           </button>
         </div>
       </div>
 
-      {/* Class Selection & Routine Season Controls Bar */}
-      <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-md grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        {/* Class Filter */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
-            Select Class Grade
-          </label>
-          <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 text-white text-xs font-bold rounded-xl p-2.5 focus:outline-hidden focus:border-emerald-500"
-          >
-            {GRADE_LEVELS.map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Section Filter */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
-            Class Section
-          </label>
-          <select
-            value={selectedSection}
-            onChange={(e) => setSelectedSection(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 text-white text-xs font-bold rounded-xl p-2.5 focus:outline-hidden focus:border-emerald-500"
-          >
-            <option value="A">Section A</option>
-            <option value="B">Section B</option>
-            <option value="C">Section C</option>
-          </select>
-        </div>
-
-        {/* Routine Season Timings Preset */}
-        <div className="md:col-span-2">
-          <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
-            School Shift / Season Routine
-          </label>
-          <div className="grid grid-cols-3 gap-1.5 bg-slate-800 p-1 rounded-xl border border-slate-700">
-            <button
-              onClick={() => setSeasonRoutine("summer")}
-              className={`py-1.5 px-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1 ${
-                seasonRoutine === "summer"
-                  ? "bg-amber-500 text-slate-950 shadow-xs"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Sun className="w-3.5 h-3.5" /> Summer (7:30-1:35)
-            </button>
-            <button
-              onClick={() => setSeasonRoutine("winter")}
-              className={`py-1.5 px-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1 ${
-                seasonRoutine === "winter"
-                  ? "bg-sky-500 text-slate-950 shadow-xs"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Snowflake className="w-3.5 h-3.5" /> Winter (8:00-2:05)
-            </button>
-            <button
-              onClick={() => setSeasonRoutine("friday")}
-              className={`py-1.5 px-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1 ${
-                seasonRoutine === "friday"
-                  ? "bg-emerald-500 text-slate-950 shadow-xs"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5" /> Friday Short
-            </button>
-          </div>
-        </div>
+      {/* Timetable View Mode Tabs (Class Matrix vs Teacher Personal Duty Schedule) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-2 shadow-xs flex items-center gap-2">
+        <button
+          onClick={() => setTimetableViewMode("class_matrix")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            timetableViewMode === "class_matrix"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Calendar className="w-4 h-4" /> Class Timetable Matrix
+        </button>
+        <button
+          onClick={() => setTimetableViewMode("my_schedule")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            timetableViewMode === "my_schedule"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <UserCheck className="w-4 h-4" /> My Assigned Periods / Teacher Duty Schedule
+        </button>
       </div>
 
-      {/* Sarea OK Ki Report - Finalized Status Badge */}
-      <div className="bg-emerald-900 text-white rounded-2xl p-4 shadow-sm border border-emerald-800 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-emerald-300 uppercase tracking-widest">
-                Sarea Report / سارے اوکے کی رپورٹ
-              </span>
-              <span className="bg-emerald-400/20 text-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
-                100% Complete & Active
-              </span>
+      {/* VIEW MODE 1: TEACHER PERSONAL DUTY SCHEDULE */}
+      {timetableViewMode === "my_schedule" && (
+        <div className="space-y-6">
+          {/* Teacher Selector & Search Bar */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-base font-black text-slate-900">
+                  Teacher Duty Schedule & Assigned Periods
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                View individual class periods, timings, assigned subjects, and room locations for each teacher.
+              </p>
             </div>
-            <p className="text-sm font-extrabold text-white mt-0.5">
-              {selectedClass} ({selectedSection}) Weekly Routine Schedule Status: All Clear
-            </p>
+
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <label className="text-xs font-bold text-slate-700 whitespace-nowrap">Filter Teacher:</label>
+              <input
+                type="text"
+                value={selectedTeacherName}
+                onChange={(e) => setSelectedTeacherName(e.target.value)}
+                placeholder="Enter Teacher Name..."
+                className="bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-hidden focus:border-emerald-500 w-full md:w-64"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Quick stats pills */}
-        <div className="flex items-center gap-3 text-xs font-bold text-emerald-100 shrink-0">
-          <div className="bg-emerald-950/60 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-center">
-            <span className="block text-[10px] text-emerald-400 font-semibold uppercase">Scheduled Periods</span>
-            <span>{currentClassTimetable.length} Slots Assigned</span>
-          </div>
-          <div className="bg-emerald-950/60 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-center">
-            <span className="block text-[10px] text-emerald-400 font-semibold uppercase">Teacher Conflicts</span>
-            <span className="text-emerald-300 flex items-center gap-1 justify-center">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 0 Conflicts
-            </span>
-          </div>
-          <div className="bg-emerald-950/60 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-center">
-            <span className="block text-[10px] text-emerald-400 font-semibold uppercase">Class Incharge</span>
-            <span>Dr. Kamran Malik</span>
-          </div>
-        </div>
-      </div>
+          {/* Teacher Schedule Summary Card */}
+          {(() => {
+            const teacherPeriods = timetable.filter((t) =>
+              t.teacherName.toLowerCase().includes(selectedTeacherName.toLowerCase())
+            );
 
-      {/* Main Weekly Timetable Grid Matrix */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-emerald-700" />
-            <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-              {selectedClass} ({selectedSection}) Weekly Routine Matrix (Mon - Sat)
-            </h4>
-          </div>
-          <p className="text-[11px] text-slate-500 font-medium">
-            Active Shift: <span className="font-bold text-slate-800 uppercase">{seasonRoutine} Timings</span>
-          </p>
-        </div>
+            return (
+              <div className="space-y-6">
+                <div className="bg-emerald-900 text-white rounded-2xl p-4 shadow-sm border border-emerald-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-white">
+                        {selectedTeacherName || "Teacher"}'s Weekly Schedule
+                      </h4>
+                      <p className="text-xs text-emerald-200 mt-0.5">
+                        Total {teacherPeriods.length} Assigned Periods across all classes
+                      </p>
+                    </div>
+                  </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse min-w-[900px]">
-            <thead>
-              <tr className="bg-slate-100 text-slate-600 font-black border-b border-slate-200 text-[11px]">
-                <th className="p-3.5 w-28 border-r border-slate-200">DAY / PERIOD</th>
-                {PAKISTANI_TIME_SLOTS.map((slot) => {
-                  const timeText =
-                    seasonRoutine === "summer"
-                      ? slot.summerTime
-                      : seasonRoutine === "winter"
-                      ? slot.winterTime
-                      : slot.fridayTime;
+                  <div className="bg-emerald-950/60 border border-emerald-700/60 px-4 py-2 rounded-xl text-center">
+                    <span className="text-[10px] text-emerald-400 font-semibold uppercase block">Weekly Teaching Load</span>
+                    <span className="text-xs font-bold text-emerald-100">{teacherPeriods.length} Periods / Week</span>
+                  </div>
+                </div>
 
-                  return (
-                    <th key={slot.id} className="p-3.5 text-center border-r border-slate-200 min-w-[110px]">
-                      <div className="font-extrabold text-slate-800">{slot.title}</div>
-                      <div className="text-[10px] font-mono text-slate-500 font-normal mt-0.5">{timeText}</div>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-slate-200">
-              {DAYS_OF_WEEK.map((day) => (
-                <tr key={day} className="hover:bg-slate-50/70 transition">
-                  {/* Day Label */}
-                  <td className="p-3.5 font-black text-slate-900 bg-slate-50 border-r border-slate-200 text-xs">
-                    {day}
-                  </td>
-
-                  {/* Period Slots */}
-                  {PAKISTANI_TIME_SLOTS.map((slot) => {
-                    const slotTimeString =
-                      seasonRoutine === "summer"
-                        ? slot.summerTime
-                        : seasonRoutine === "winter"
-                        ? slot.winterTime
-                        : slot.fridayTime;
-
-                    if (slot.isBreak) {
-                      return (
-                        <td
-                          key={slot.id}
-                          className="p-2.5 text-center bg-amber-50/70 border-r border-slate-200 align-middle"
-                        >
-                          <div className="text-[10px] font-black text-amber-800 uppercase tracking-tight">
-                            {slot.title}
-                          </div>
-                          <div className="text-[9px] text-amber-600 font-semibold mt-0.5">
-                            {slot.id === "asm" ? "Nazra & Dua" : "Tiffin / Break"}
-                          </div>
-                        </td>
-                      );
-                    }
-
-                    const matchingItem = currentClassTimetable.find(
-                      (t) => t.day === day && t.timeSlot === slotTimeString
-                    );
-
-                    const badgeColorClass = matchingItem
-                      ? SUBJECT_COLORS[matchingItem.subject] || "bg-slate-100 text-slate-800 border-slate-300"
-                      : "";
+                {/* Day-by-Day Periods Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {DAYS_OF_WEEK.map((day) => {
+                    const dayPeriods = teacherPeriods.filter((t) => t.day === day);
 
                     return (
-                      <td
-                        key={slot.id}
-                        className="p-2 border-r border-slate-200 align-top hover:bg-emerald-50/30 transition relative group"
-                      >
-                        {matchingItem ? (
-                          <div className={`p-2.5 rounded-xl border ${badgeColorClass} shadow-2xs space-y-1 relative`}>
-                            <div className="flex items-center justify-between">
-                              <span className="font-black text-xs block leading-tight">{matchingItem.subject}</span>
-                              <div className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                                <button
-                                  onClick={() => handleDeleteSlot(matchingItem.id)}
-                                  className="text-red-600 hover:text-red-800 p-0.5"
-                                  title="Remove period entry"
+                      <div key={day} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
+                        <div className="flex items-center justify-between border-b pb-2 border-slate-100">
+                          <span className="font-black text-sm text-slate-900 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-emerald-600" />
+                            {day}
+                          </span>
+                          <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">
+                            {dayPeriods.length} {dayPeriods.length === 1 ? "Period" : "Periods"}
+                          </span>
+                        </div>
+
+                        {dayPeriods.length > 0 ? (
+                          <div className="space-y-2">
+                            {dayPeriods.map((p) => {
+                              const badgeColor = SUBJECT_COLORS[p.subject] || "bg-slate-100 text-slate-800 border-slate-200";
+
+                              return (
+                                <div
+                                  key={p.id}
+                                  className={`p-3 rounded-xl border ${badgeColor} shadow-2xs space-y-1`}
                                 >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-                            <div className="text-[10px] font-bold opacity-90 truncate">{matchingItem.teacherName}</div>
-                            <div className="text-[9px] font-semibold opacity-75">{matchingItem.roomNo}</div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-black text-xs text-slate-900">{p.subject}</span>
+                                    <span className="text-[10px] font-bold bg-white/80 px-2 py-0.5 rounded-md border border-slate-200">
+                                      {p.className} ({p.section || "A"})
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center justify-between text-[11px] text-slate-700 pt-1 font-semibold">
+                                    <span className="flex items-center gap-1 text-slate-600">
+                                      <Clock className="w-3 h-3 text-emerald-600" /> {p.timeSlot}
+                                    </span>
+                                    <span className="text-slate-500 font-bold">{p.roomNo}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
-                          <button
-                            onClick={() => {
-                              setEditingSlot({
-                                day,
-                                timeSlot: slotTimeString,
-                                subject: "Mathematics",
-                                teacherName: "Sarah Jenkins",
-                                roomNo: "Room 102",
-                              });
-                              setIsEditorOpen(true);
-                            }}
-                            className="w-full h-full min-h-[60px] rounded-xl border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 flex flex-col items-center justify-center text-slate-400 hover:text-emerald-700 transition"
-                          >
-                            <Plus className="w-3.5 h-3.5 mb-0.5" />
-                            <span className="text-[9px] font-bold">Assign</span>
-                          </button>
+                          <div className="p-4 text-center text-slate-400 text-xs italic bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            No classes assigned on {day}
+                          </div>
                         )}
-                      </td>
+                      </div>
                     );
                   })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </div>
+              </div>
+            );
+          })()}
         </div>
-      </div>
+      )}
+
+      {/* VIEW MODE 2: CLASS TIMETABLE MATRIX */}
+      {timetableViewMode === "class_matrix" && (
+        <div className="space-y-6">
+          {/* Class Selection & Routine Season Controls Bar */}
+          <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-md grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            {/* Class Filter */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                Select Class Grade
+              </label>
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 text-white text-xs font-bold rounded-xl p-2.5 focus:outline-hidden focus:border-emerald-500 cursor-pointer"
+              >
+                {GRADE_LEVELS.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Section Filter */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                Class Section
+              </label>
+              <select
+                value={selectedSection}
+                onChange={(e) => setSelectedSection(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 text-white text-xs font-bold rounded-xl p-2.5 focus:outline-hidden focus:border-emerald-500 cursor-pointer"
+              >
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+                <option value="C">Section C</option>
+              </select>
+            </div>
+
+            {/* Routine Season Timings Preset */}
+            <div className="md:col-span-2">
+              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                School Shift / Season Routine
+              </label>
+              <div className="grid grid-cols-3 gap-1.5 bg-slate-800 p-1 rounded-xl border border-slate-700">
+                <button
+                  onClick={() => setSeasonRoutine("summer")}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1 cursor-pointer ${
+                    seasonRoutine === "summer"
+                      ? "bg-amber-500 text-slate-950 shadow-xs"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Sun className="w-3.5 h-3.5" /> Summer (7:30-1:35)
+                </button>
+                <button
+                  onClick={() => setSeasonRoutine("winter")}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1 cursor-pointer ${
+                    seasonRoutine === "winter"
+                      ? "bg-sky-500 text-slate-950 shadow-xs"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Snowflake className="w-3.5 h-3.5" /> Winter (8:00-2:05)
+                </button>
+                <button
+                  onClick={() => setSeasonRoutine("friday")}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1 cursor-pointer ${
+                    seasonRoutine === "friday"
+                      ? "bg-emerald-500 text-slate-950 shadow-xs"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" /> Friday Short
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sarea OK Ki Report - Finalized Status Badge */}
+          <div className="bg-emerald-900 text-white rounded-2xl p-4 shadow-sm border border-emerald-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-emerald-300 uppercase tracking-widest">
+                    Sarea Report / سارے اوکے کی رپورٹ
+                  </span>
+                  <span className="bg-emerald-400/20 text-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
+                    100% Complete & Active
+                  </span>
+                </div>
+                <p className="text-sm font-extrabold text-white mt-0.5">
+                  {selectedClass} ({selectedSection}) Weekly Routine Schedule Status: All Clear
+                </p>
+              </div>
+            </div>
+
+            {/* Quick stats pills */}
+            <div className="flex items-center gap-3 text-xs font-bold text-emerald-100 shrink-0">
+              <div className="bg-emerald-950/60 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-center">
+                <span className="block text-[10px] text-emerald-400 font-semibold uppercase">Scheduled Periods</span>
+                <span>{currentClassTimetable.length} Slots Assigned</span>
+              </div>
+              <div className="bg-emerald-950/60 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-center">
+                <span className="block text-[10px] text-emerald-400 font-semibold uppercase">Teacher Conflicts</span>
+                <span className="text-emerald-300 flex items-center gap-1 justify-center">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 0 Conflicts
+                </span>
+              </div>
+              <div className="bg-emerald-950/60 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-center">
+                <span className="block text-[10px] text-emerald-400 font-semibold uppercase">Class Incharge</span>
+                <span>Dr. Kamran Malik</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Weekly Timetable Grid Matrix */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-emerald-700" />
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                  {selectedClass} ({selectedSection}) Weekly Routine Matrix (Mon - Sat)
+                </h4>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Active Shift: <span className="font-bold text-slate-800 uppercase">{seasonRoutine} Timings</span>
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse min-w-[900px]">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-600 font-black border-b border-slate-200 text-[11px]">
+                    <th className="p-3.5 w-28 border-r border-slate-200">DAY / PERIOD</th>
+                    {PAKISTANI_TIME_SLOTS.map((slot) => {
+                      const timeText =
+                        seasonRoutine === "summer"
+                          ? slot.summerTime
+                          : seasonRoutine === "winter"
+                          ? slot.winterTime
+                          : slot.fridayTime;
+
+                      return (
+                        <th key={slot.id} className="p-3.5 text-center border-r border-slate-200 min-w-[110px]">
+                          <div className="font-extrabold text-slate-800">{slot.title}</div>
+                          <div className="text-[10px] font-mono text-slate-500 font-normal mt-0.5">{timeText}</div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-200">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <tr key={day} className="hover:bg-slate-50/70 transition">
+                      {/* Day Label */}
+                      <td className="p-3.5 font-black text-slate-900 bg-slate-50 border-r border-slate-200 text-xs">
+                        {day}
+                      </td>
+
+                      {/* Period Slots */}
+                      {PAKISTANI_TIME_SLOTS.map((slot) => {
+                        const slotTimeString =
+                          seasonRoutine === "summer"
+                            ? slot.summerTime
+                            : seasonRoutine === "winter"
+                            ? slot.winterTime
+                            : slot.fridayTime;
+
+                        if (slot.isBreak) {
+                          return (
+                            <td
+                              key={slot.id}
+                              className="p-2.5 text-center bg-amber-50/70 border-r border-slate-200 align-middle"
+                            >
+                              <div className="text-[10px] font-black text-amber-800 uppercase tracking-tight">
+                                {slot.title}
+                              </div>
+                              <div className="text-[9px] text-amber-600 font-semibold mt-0.5">
+                                {slot.id === "asm" ? "Nazra & Dua" : "Tiffin / Break"}
+                              </div>
+                            </td>
+                          );
+                        }
+
+                        const matchingItem = currentClassTimetable.find(
+                          (t) => t.day === day && t.timeSlot === slotTimeString
+                        );
+
+                        const badgeColorClass = matchingItem
+                          ? SUBJECT_COLORS[matchingItem.subject] || "bg-slate-100 text-slate-800 border-slate-300"
+                          : "";
+
+                        return (
+                          <td
+                            key={slot.id}
+                            className="p-2 border-r border-slate-200 align-top hover:bg-emerald-50/30 transition relative group"
+                          >
+                            {matchingItem ? (
+                              <div className={`p-2.5 rounded-xl border ${badgeColorClass} shadow-2xs space-y-1 relative`}>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-black text-xs block leading-tight">{matchingItem.subject}</span>
+                                  {!isReadOnlyRole && (
+                                    <div className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                                      <button
+                                        onClick={() => handleDeleteSlot(matchingItem.id)}
+                                        className="text-red-600 hover:text-red-800 p-0.5 cursor-pointer"
+                                        title="Remove period entry"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-[10px] font-bold opacity-90 truncate">{matchingItem.teacherName}</div>
+                                <div className="text-[9px] font-semibold opacity-75">{matchingItem.roomNo}</div>
+                              </div>
+                            ) : isReadOnlyRole ? (
+                              <div className="w-full h-full min-h-[60px] rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-center text-slate-400">
+                                <span className="text-[9px] font-medium italic">Free Period</span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setEditingSlot({
+                                    day,
+                                    timeSlot: slotTimeString,
+                                    subject: "Mathematics",
+                                    teacherName: "Sarah Jenkins",
+                                    roomNo: "Room 102",
+                                  });
+                                  setIsEditorOpen(true);
+                                }}
+                                className="w-full h-full min-h-[60px] rounded-xl border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 flex flex-col items-center justify-center text-slate-400 hover:text-emerald-700 transition cursor-pointer"
+                              >
+                                <Plus className="w-3.5 h-3.5 mb-0.5" />
+                                <span className="text-[9px] font-bold">Assign</span>
+                              </button>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Period Assignment Modal / Editor */}
       {isEditorOpen && (

@@ -55,6 +55,8 @@ interface ResultManagementModuleProps {
   schoolConfig?: SchoolConfig;
   activeRole?: string;
   loggedInUser?: Student | Teacher | null;
+  isResultLocked?: boolean;
+  setIsResultLocked?: (locked: boolean) => void;
 }
 
 // System Grade Scale Config
@@ -101,6 +103,8 @@ export function ResultManagementModule({
   schoolConfig,
   activeRole = "Super Admin",
   loggedInUser,
+  isResultLocked: propIsResultLocked,
+  setIsResultLocked: propSetIsResultLocked,
 }: ResultManagementModuleProps) {
   // Navigation & Hierarchy State
   const [selectedClass, setSelectedClass] = useState<string>("Class 10");
@@ -127,7 +131,18 @@ export function ResultManagementModule({
   // Admin Config States
   const [passingMarksPercent, setPassingMarksPercent] = useState<number>(30);
   const [useGpaSystem, setUseGpaSystem] = useState<boolean>(false);
-  const [isResultLocked, setIsResultLocked] = useState<boolean>(false);
+  const [internalIsResultLocked, setInternalIsResultLocked] = useState<boolean>(false);
+
+  const isResultLocked = propIsResultLocked !== undefined ? propIsResultLocked : internalIsResultLocked;
+  const toggleResultLock = (val: boolean) => {
+    if (propSetIsResultLocked) {
+      propSetIsResultLocked(val);
+    } else {
+      setInternalIsResultLocked(val);
+    }
+  };
+
+  const isAdminRole = activeRole === "Super Admin" || activeRole === "Principal";
   const [gradeScales, setGradeScales] = useState<GradeScale[]>(DEFAULT_GRADE_SCALES);
 
   // Search & Filter States
@@ -1227,21 +1242,61 @@ export function ResultManagementModule({
             </div>
 
             {/* Lock Status Indicator */}
-            <button
-              onClick={() => setIsResultLocked(!isResultLocked)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold transition shadow-sm ${
-                isResultLocked
-                  ? "bg-rose-500 text-white hover:bg-rose-600"
-                  : "bg-emerald-500 text-white hover:bg-emerald-600"
-              }`}
-              title={isResultLocked ? "Results are locked. Click to unlock." : "Results are unlocked. Click to lock."}
-            >
-              {isResultLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-              <span>{isResultLocked ? "LOCKED" : "UNLOCKED"}</span>
-            </button>
+            {isAdminRole ? (
+              <button
+                onClick={() => toggleResultLock(!isResultLocked)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold transition shadow-sm cursor-pointer ${
+                  isResultLocked
+                    ? "bg-rose-500 text-white hover:bg-rose-600"
+                    : "bg-emerald-500 text-white hover:bg-emerald-600"
+                }`}
+                title={isResultLocked ? "Results are locked. Click to unlock." : "Results are unlocked. Click to lock."}
+              >
+                {isResultLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                <span>{isResultLocked ? "LOCKED" : "UNLOCKED"}</span>
+              </button>
+            ) : (
+              <div
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold shadow-sm ${
+                  isResultLocked ? "bg-rose-500/80 text-white" : "bg-emerald-500/80 text-white"
+                }`}
+              >
+                {isResultLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                <span>{isResultLocked ? "LOCKED (Admin)" : "UNLOCKED"}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Lock Notice Banner */}
+      {isResultLocked && (
+        <div className="bg-rose-900 text-white rounded-2xl p-4 border border-rose-700 shadow-md flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-rose-300 shrink-0">
+              <Lock className="w-6 h-6 text-rose-300" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-rose-100 uppercase tracking-wide">
+                🔒 Result Entry System Locked by Admin / Principal
+              </h4>
+              <p className="text-xs text-rose-200 mt-0.5">
+                {isAdminRole
+                  ? "Results are currently locked. Teachers cannot modify or enter marks until you unlock the system."
+                  : "Result entry and marks editing are locked by the Admin/Principal. You cannot edit or add marks right now."}
+              </p>
+            </div>
+          </div>
+          {isAdminRole && (
+            <button
+              onClick={() => toggleResultLock(false)}
+              className="bg-white text-rose-900 hover:bg-rose-50 px-4 py-2 rounded-xl text-xs font-black transition shrink-0 cursor-pointer shadow-sm"
+            >
+              Unlock Results Now
+            </button>
+          )}
+        </div>
+      )}
 
       {/* CLASS HIERARCHY SELECTOR TABS */}
       <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs">

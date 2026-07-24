@@ -302,6 +302,16 @@ export default function App() {
     }
   }, [activeRole, activeTab, isAuthenticated]);
 
+  // Lock state for result management across the ERP
+  const [isResultLocked, setIsResultLocked] = useState<boolean>(() => {
+    return localStorage.getItem("app_isResultLocked") === "true";
+  });
+
+  const handleToggleResultLock = (locked: boolean) => {
+    setIsResultLocked(locked);
+    localStorage.setItem("app_isResultLocked", locked ? "true" : "false");
+  };
+
   const handleLoginSuccess = (
     role: "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent",
     userObj?: Student | Teacher | null
@@ -398,6 +408,8 @@ export default function App() {
             schoolConfig={schoolConfig}
             activeRole={activeRole}
             loggedInUser={loggedInUser}
+            isResultLocked={isResultLocked}
+            setIsResultLocked={handleToggleResultLock}
           />
         );
       case "timetable":
@@ -416,6 +428,8 @@ export default function App() {
             inventory={inventory}
             setInventory={setInventory}
             initialSubTab="timetable"
+            activeRole={activeRole}
+            loggedInUser={loggedInUser}
           />
         );
       case "generators":
@@ -432,7 +446,13 @@ export default function App() {
           />
         );
       case "ai-tools":
-        return <AiToolsModule />;
+        return (
+          <AiToolsModule
+            activeRole={activeRole}
+            loggedInUser={loggedInUser}
+            schoolConfig={schoolConfig}
+          />
+        );
       case "settings":
         return (
           <div id="settings-panel" className="bg-brand-card rounded-2xl border border-brand-accent p-6 shadow-sm">

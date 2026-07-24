@@ -162,6 +162,13 @@ export function ExamModule({
     room: string;
   }[]>([]);
 
+  // Auto load logged in student's class for date sheet filter when role is Student
+  React.useEffect(() => {
+    if (activeRole === "Student" && loggedInUser && "class" in loggedInUser && loggedInUser.class) {
+      setSelectedClassFilter(loggedInUser.class);
+    }
+  }, [activeRole, loggedInUser]);
+
   // Function to export Date Sheet to Microsoft Word (.doc) format
   const exportToWord = () => {
     const area = document.getElementById("printable-date-sheet-area");
@@ -910,17 +917,19 @@ export function ExamModule({
             Marks Entry Desk
           </button>
         )}
-        <button
-          onClick={() => {
-            setActiveSubTab("reports");
-            setActiveTranscriptStudent(null);
-          }}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition whitespace-nowrap ${
-            activeSubTab === "reports" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          Transcripts & Report Cards
-        </button>
+        {activeRole !== "Student" && (
+          <button
+            onClick={() => {
+              setActiveSubTab("reports");
+              setActiveTranscriptStudent(null);
+            }}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition whitespace-nowrap ${
+              activeSubTab === "reports" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Transcripts & Report Cards
+          </button>
+        )}
         <button
           onClick={() => {
             setActiveSubTab("toppers");
@@ -1478,7 +1487,7 @@ export function ExamModule({
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {setExamSchedules && (
+                  {setExamSchedules && activeRole !== "Student" && (
                     <>
                       <button
                         onClick={handleOpenBuilder}
@@ -1623,7 +1632,7 @@ export function ExamModule({
                       <th className={`border-r border-slate-300 ${tablePaddingClass}`}>Subject & Paper Info</th>
                       <th className={`border-r border-slate-300 ${tablePaddingClass}`}>Exam Timing</th>
                       <th className={`border-r border-slate-300 ${tablePaddingClass}`}>Room</th>
-                      <th className="p-2 text-center no-print w-24">Actions</th>
+                      {activeRole !== "Student" && <th className="p-2 text-center no-print w-24">Actions</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300 text-slate-800">
@@ -1659,31 +1668,33 @@ export function ExamModule({
                           <td className={`border-r border-slate-300 font-medium text-slate-600 ${tablePaddingClass}`}>
                             {ex.room}
                           </td>
-                          <td className="p-2 text-center no-print">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => handleEditSchedule(ex)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition"
-                                title="Edit Paper"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteSchedule(ex.id)}
-                                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-md transition"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
+                          {activeRole !== "Student" && (
+                            <td className="p-2 text-center no-print">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => handleEditSchedule(ex)}
+                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition"
+                                  title="Edit Paper"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSchedule(ex.id)}
+                                  className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-md transition"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
                     {filteredSchedules.length === 0 && (
                       <tr>
-                        <td colSpan={selectedClassFilter === "All" ? 7 : 6} className="text-center p-8 text-slate-400 italic">
-                          No papers scheduled for the selected filters. Click "Add Single Paper Schedule" to schedule papers!
+                        <td colSpan={selectedClassFilter === "All" ? (activeRole !== "Student" ? 7 : 6) : (activeRole !== "Student" ? 6 : 5)} className="text-center p-8 text-slate-400 italic">
+                          No papers scheduled for the selected filters.
                         </td>
                       </tr>
                     )}
