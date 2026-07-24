@@ -130,27 +130,26 @@ const THEME_PRESETS: ThemePreset[] = [
 
 export default function App() {
   const [authUser, setAuthUser] = useState<FirebaseUser | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem("erp_authenticated") === "true";
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setAuthUser(user);
-        setIsAuthenticated(true);
-        localStorage.setItem("erp_authenticated", "true");
-      } else {
-        setAuthUser(null);
-      }
-    });
-    return () => unsubscribe();
+    // Clear legacy auth flag on initial mount so login screen always appears first
+    localStorage.removeItem("erp_authenticated");
   }, []);
 
   const [activeRole, setActiveRole] = useState<
     "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent"
   >(() => {
     return (localStorage.getItem("erp_role") as any) || "Super Admin";
+  });
+
+  const [loggedInUser, setLoggedInUser] = useState<Student | Teacher | null>(() => {
+    try {
+      const saved = localStorage.getItem("erp_user_obj");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -285,7 +284,7 @@ export default function App() {
       case "Accountant":
         return ["fees"];
       case "Student":
-        return ["profile", "attendance", "exams", "timetable", "ai-tools"];
+        return ["students", "exams"];
       case "Parent":
         return ["child-profile", "attendance", "exams", "fees"];
       default:
@@ -294,10 +293,17 @@ export default function App() {
   };
 
   const handleLoginSuccess = (
-    role: "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent"
+    role: "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent",
+    userObj?: Student | Teacher | null
   ) => {
     setIsAuthenticated(true);
     setActiveRole(role);
+    setLoggedInUser(userObj || null);
+    if (userObj) {
+      localStorage.setItem("erp_user_obj", JSON.stringify(userObj));
+    } else {
+      localStorage.removeItem("erp_user_obj");
+    }
     localStorage.setItem("erp_authenticated", "true");
     localStorage.setItem("erp_role", role);
 
@@ -313,8 +319,10 @@ export default function App() {
     }
     setIsAuthenticated(false);
     setAuthUser(null);
+    setLoggedInUser(null);
     localStorage.removeItem("erp_authenticated");
     localStorage.removeItem("erp_role");
+    localStorage.removeItem("erp_user_obj");
   };
 
   const renderContent = () => {
@@ -342,6 +350,8 @@ export default function App() {
             invoices={invoices}
             setInvoices={setInvoices}
             feeStructures={feeStructures}
+            activeRole={activeRole}
+            loggedInUser={loggedInUser}
           />
         );
       case "teachers":
@@ -376,6 +386,8 @@ export default function App() {
             grades={grades}
             setGrades={setGrades}
             schoolConfig={schoolConfig}
+            activeRole={activeRole}
+            loggedInUser={loggedInUser}
           />
         );
       case "timetable":

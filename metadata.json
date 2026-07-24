@@ -1,5 +1,5 @@
 {
-  "name": "School Management System ERP",
+  "name": "Citizen School & College ERP",
   "description": "A premium, simple, and professional ERP system for school, college, and academy administration, integrated with smart AI modules.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

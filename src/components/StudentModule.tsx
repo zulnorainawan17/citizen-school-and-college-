@@ -18,7 +18,7 @@ import {
   RotateCw,
   Printer,
 } from "lucide-react";
-import { Student, GRADE_LEVELS, FeeInvoice, FeeStructure } from "../types";
+import { Student, Teacher, GRADE_LEVELS, FeeInvoice, FeeStructure } from "../types";
 import { saveStudent, deleteStudent, saveFeeInvoice } from "../lib/firestoreService";
 
 interface StudentModuleProps {
@@ -27,6 +27,8 @@ interface StudentModuleProps {
   invoices?: FeeInvoice[];
   setInvoices?: React.Dispatch<React.SetStateAction<FeeInvoice[]>>;
   feeStructures?: FeeStructure[];
+  activeRole?: string;
+  loggedInUser?: Student | Teacher | null;
 }
 
 export function StudentModule({
@@ -35,7 +37,10 @@ export function StudentModule({
   invoices = [],
   setInvoices,
   feeStructures = [],
+  activeRole,
+  loggedInUser,
 }: StudentModuleProps) {
+  const isReadOnly = activeRole === "Student" || activeRole === "Parent";
   // Navigation states: 'list', 'create', 'edit', 'profile', 'id-card'
   const [viewMode, setViewMode] = useState<"list" | "create" | "edit" | "profile" | "id-card">("list");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -283,6 +288,18 @@ export function StudentModule({
 
   // Filter students based on state
   const filteredStudents = students.filter((s) => {
+    if (activeRole === "Student") {
+      if (loggedInUser && "admissionNo" in loggedInUser) {
+        const isSelf =
+          s.id === loggedInUser.id ||
+          s.admissionNo === loggedInUser.admissionNo ||
+          s.name.toLowerCase().trim() === loggedInUser.name.toLowerCase().trim();
+        if (!isSelf) return false;
+      } else if (students.length > 0) {
+        if (s.id !== students[0].id) return false;
+      }
+    }
+
     const matchesSearch =
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -306,13 +323,15 @@ export function StudentModule({
           <p className="text-xs text-slate-500">Manage admissions, promote grades, generate ID cards, and profiles.</p>
         </div>
         {viewMode === "list" ? (
-          <button
-            id="admit-student-btn"
-            onClick={handleCreateNewClick}
-            className="flex items-center gap-1.5 bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 px-3.5 rounded-lg text-xs transition"
-          >
-            <Plus className="w-4 h-4" /> New Student Admission
-          </button>
+          !isReadOnly && (
+            <button
+              id="admit-student-btn"
+              onClick={handleCreateNewClick}
+              className="flex items-center gap-1.5 bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 px-3.5 rounded-lg text-xs transition"
+            >
+              <Plus className="w-4 h-4" /> New Student Admission
+            </button>
+          )
         ) : (
           <button
             id="back-to-list-btn"
@@ -446,20 +465,24 @@ export function StudentModule({
                           >
                             <CreditCard className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleEditClick(s)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteStudent(s)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {!isReadOnly && (
+                            <>
+                              <button
+                                onClick={() => handleEditClick(s)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteStudent(s)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-md"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -899,33 +922,35 @@ export function StudentModule({
           </div>
 
           {/* Actions for active student */}
-          <div className="flex flex-wrap gap-2.5 justify-end border-t border-slate-100 pt-4">
-            <button
-              onClick={() => handlePromoteStudent(selectedStudent)}
-              className="text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-lg flex items-center gap-1"
-            >
-              <ChevronsUp className="w-4 h-4" /> Promote Grade
-            </button>
-            <button
-              onClick={() => handleTransferStudent(selectedStudent.id)}
-              className="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-lg flex items-center gap-1"
-            >
-              <ArrowRightLeft className="w-4 h-4" /> Record Transfer
-            </button>
-            <button
-              onClick={() => handleWithdrawStudent(selectedStudent.id)}
-              className="text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-3.5 py-2 rounded-lg flex items-center gap-1"
-            >
-              <UserX className="w-4 h-4" /> Withdraw Admission
-            </button>
-            <button
-              onClick={() => handleDeleteStudent(selectedStudent)}
-              className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3.5 py-2 rounded-lg flex items-center gap-1 transition"
-              title="Delete Student Record"
-            >
-              <Trash2 className="w-4 h-4" /> Delete Student
-            </button>
-          </div>
+          {!isReadOnly && (
+            <div className="flex flex-wrap gap-2.5 justify-end border-t border-slate-100 pt-4">
+              <button
+                onClick={() => handlePromoteStudent(selectedStudent)}
+                className="text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-lg flex items-center gap-1"
+              >
+                <ChevronsUp className="w-4 h-4" /> Promote Grade
+              </button>
+              <button
+                onClick={() => handleTransferStudent(selectedStudent.id)}
+                className="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-lg flex items-center gap-1"
+              >
+                <ArrowRightLeft className="w-4 h-4" /> Record Transfer
+              </button>
+              <button
+                onClick={() => handleWithdrawStudent(selectedStudent.id)}
+                className="text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-3.5 py-2 rounded-lg flex items-center gap-1"
+              >
+                <UserX className="w-4 h-4" /> Withdraw Admission
+              </button>
+              <button
+                onClick={() => handleDeleteStudent(selectedStudent)}
+                className="text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3.5 py-2 rounded-lg flex items-center gap-1 transition"
+                title="Delete Student Record"
+              >
+                <Trash2 className="w-4 h-4" /> Delete Student
+              </button>
+            </div>
+          )}
         </div>
       )}
 

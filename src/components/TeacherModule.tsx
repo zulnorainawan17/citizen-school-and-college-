@@ -314,7 +314,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
                 required
                 value={formData.email || ""}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="kamran.malik@beaconhill.edu"
+                placeholder="kamran.malik@citizenschool.edu.pk"
                 className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 focus:outline-hidden"
               />
             </div>

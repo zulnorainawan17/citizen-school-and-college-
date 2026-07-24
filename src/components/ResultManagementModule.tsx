@@ -45,7 +45,7 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-import { Student, GradeRecord, GRADE_LEVELS, SchoolConfig } from "../types";
+import { Student, Teacher, GradeRecord, GRADE_LEVELS, SchoolConfig } from "../types";
 import { getSubjectsForClass } from "./ExamModule";
 
 interface ResultManagementModuleProps {
@@ -54,6 +54,7 @@ interface ResultManagementModuleProps {
   setGrades: React.Dispatch<React.SetStateAction<GradeRecord[]>>;
   schoolConfig?: SchoolConfig;
   activeRole?: string;
+  loggedInUser?: Student | Teacher | null;
 }
 
 // System Grade Scale Config
@@ -98,9 +99,16 @@ export function ResultManagementModule({
   setGrades,
   schoolConfig,
   activeRole = "Super Admin",
+  loggedInUser,
 }: ResultManagementModuleProps) {
   // Navigation & Hierarchy State
   const [selectedClass, setSelectedClass] = useState<string>("Class 10");
+
+  React.useEffect(() => {
+    if (activeRole === "Student" && loggedInUser && "class" in loggedInUser && loggedInUser.class) {
+      setSelectedClass(loggedInUser.class);
+    }
+  }, [activeRole, loggedInUser]);
   const [selectedExam, setSelectedExam] = useState<string>("Annual Exam 2026");
   const [selectedSession, setSelectedSession] = useState<string>("2025-2026");
   const [activeTab, setActiveTab] = useState<
@@ -130,6 +138,59 @@ export function ResultManagementModule({
   const [activeSubjectModalStudent, setActiveSubjectModalStudent] = useState<Student | null>(null);
   const [editingStudentMarks, setEditingStudentMarks] = useState<Student | null>(null);
   const [editMarksMap, setEditMarksMap] = useState<{ [subject: string]: number }>({});
+
+  // Dedicated Student Portal Search State
+  const [studentPortalQuery, setStudentPortalQuery] = useState<string>(() => {
+    if (activeRole === "Student" && loggedInUser && "name" in loggedInUser) {
+      return loggedInUser.name;
+    }
+    return "";
+  });
+
+  // Auto load logged in student result if activeRole === "Student"
+  React.useEffect(() => {
+    if (activeRole === "Student" && loggedInUser && "name" in loggedInUser) {
+      const studentAdmissionNo = "admissionNo" in loggedInUser ? loggedInUser.admissionNo : "";
+      const matched = students.find(
+        (s) =>
+          s.id === loggedInUser.id ||
+          (studentAdmissionNo && s.admissionNo === studentAdmissionNo) ||
+          s.name.toLowerCase().trim() === loggedInUser.name.toLowerCase().trim()
+      );
+      if (matched) {
+        setSelectedClass(matched.class);
+        setActiveDmcStudent(matched);
+        setStudentPortalQuery(matched.name);
+      }
+    }
+  }, [activeRole, loggedInUser, students]);
+
+  const handleStudentPortalSearch = (customQuery?: string) => {
+    const q = (customQuery !== undefined ? customQuery : studentPortalQuery).trim().toLowerCase();
+    if (!q) return;
+
+    const matches = students.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.rollNo.toLowerCase().includes(q) ||
+        s.admissionNo.toLowerCase().includes(q) ||
+        s.id.toLowerCase().includes(q)
+    );
+
+    if (matches.length > 0) {
+      const exact = matches.find(
+        (s) =>
+          s.name.toLowerCase().trim() === q ||
+          s.rollNo.toLowerCase().trim() === q ||
+          s.admissionNo.toLowerCase().trim() === q
+      );
+      const chosen = exact || matches[0];
+      setSelectedClass(chosen.class);
+      setActiveDmcStudent(chosen);
+    } else {
+      alert(`No student found matching "${q}". Please check spelling or roll number.`);
+    }
+  };
 
   // Smart Upload & Hard Copy Mode States
   const [smartUploadMode, setSmartUploadMode] = useState<"photo_scan" | "softcopy_grid" | "csv_paste">("photo_scan");
@@ -457,6 +518,18 @@ export function ResultManagementModule({
   // Final Filtered Results list for table view
   const filteredResults = useMemo(() => {
     return rankedResults.filter((item) => {
+      if (activeRole === "Student") {
+        if (loggedInUser && "admissionNo" in loggedInUser) {
+          const isSelf =
+            item.student.id === loggedInUser.id ||
+            item.student.admissionNo === loggedInUser.admissionNo ||
+            item.studentName.toLowerCase().trim() === loggedInUser.name.toLowerCase().trim();
+          if (!isSelf) return false;
+        } else if (rankedResults.length > 0) {
+          if (item.student.id !== rankedResults[0].student.id) return false;
+        }
+      }
+
       const matchesSearch =
         item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.rollNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -467,7 +540,7 @@ export function ResultManagementModule({
 
       return matchesSearch && matchesStatus;
     });
-  }, [rankedResults, searchTerm, statusFilter]);
+  }, [rankedResults, searchTerm, statusFilter, activeRole, loggedInUser]);
 
   // Class Dashboard Summary Statistics
   const dashboardStats = useMemo(() => {
@@ -842,6 +915,262 @@ export function ResultManagementModule({
     `);
     printWin.document.close();
   };
+
+  const renderDmcCard = (res: any) => (
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <div className="flex items-center justify-end gap-2 no-print">
+        <button
+          onClick={() => printSingleDmc(res)}
+          className="text-xs font-bold text-white bg-slate-900 hover:bg-slate-950 px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+        >
+          <Printer className="w-4 h-4" /> Print DMC / Save PDF
+        </button>
+        <button
+          onClick={() => exportDmcToWord(res)}
+          className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+        >
+          <Download className="w-4 h-4" /> Download MS Word (.doc)
+        </button>
+      </div>
+
+      {/* Printable DMC Document Box */}
+      <div
+        id={`printable-dmc-${res.student.id}`}
+        className="bg-white border-2 border-slate-900 rounded-2xl p-6 md:p-8 space-y-6 shadow-xl relative"
+      >
+        {/* Watermark / Logo background */}
+        <div className="text-center border-b-2 border-slate-900 pb-4 space-y-1">
+          <h1 className="text-2xl font-black uppercase text-slate-900 tracking-wider">
+            {schoolConfig?.schoolName || "Citizen School & College"}
+          </h1>
+          <p className="text-xs font-bold text-slate-500 uppercase">
+            Govt. Registered Institution | Session: {selectedSession}
+          </p>
+          <div className="inline-block mt-2 bg-slate-900 text-white font-mono font-bold text-[11px] py-1 px-5 rounded-full uppercase tracking-widest">
+            DETAILED MARKS CERTIFICATE (DMC)
+          </div>
+        </div>
+
+        {/* Student Details Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Student Name</span>
+            <strong className="text-slate-900 font-extrabold">{res.studentName}</strong>
+          </div>
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Father Name</span>
+            <strong className="text-slate-900 font-extrabold">{res.fatherName}</strong>
+          </div>
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Roll Number</span>
+            <strong className="text-slate-900 font-extrabold">{res.rollNo}</strong>
+          </div>
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Registration No.</span>
+            <strong className="text-slate-900 font-extrabold">{res.registrationNo}</strong>
+          </div>
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Class & Section</span>
+            <strong className="text-slate-900 font-extrabold">{selectedClass} - {res.section}</strong>
+          </div>
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Examination</span>
+            <strong className="text-slate-900 font-extrabold">{selectedExam}</strong>
+          </div>
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Issue Date</span>
+            <strong className="text-slate-900 font-extrabold">{new Date().toLocaleDateString()}</strong>
+          </div>
+          <div>
+            <span className="block text-[9px] uppercase font-bold text-slate-400">Result Status</span>
+            <strong className={res.status === "Pass" ? "text-emerald-700 font-black uppercase" : "text-rose-700 font-black uppercase"}>
+              {res.status}
+            </strong>
+          </div>
+        </div>
+
+        {/* Subject Marks Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left border-collapse border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 font-bold border-b border-slate-300 text-slate-800">
+                <th className="p-2.5 border-r border-slate-300 w-12 text-center">Sr.</th>
+                <th className="p-2.5 border-r border-slate-300">Subject Title</th>
+                <th className="p-2.5 border-r border-slate-300 text-center w-24">Max Marks</th>
+                <th className="p-2.5 border-r border-slate-300 text-center w-28">Obtained</th>
+                <th className="p-2.5 border-r border-slate-300 text-center w-20">Grade</th>
+                <th className="p-2.5">Remarks</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {classSubjects.map((sub, idx) => {
+                const item = res.subjectsMap[sub];
+                const score = item ? item.obtained : 0;
+                const max = item ? item.max : 100;
+                const grade = item ? item.grade : "F";
+                const isPass = score >= passingMarksPercent;
+
+                return (
+                  <tr key={sub} className="hover:bg-slate-50">
+                    <td className="p-2.5 border-r border-slate-300 text-center text-slate-500 font-bold">{idx + 1}</td>
+                    <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900">{sub}</td>
+                    <td className="p-2.5 border-r border-slate-300 text-center font-mono">{max}</td>
+                    <td className="p-2.5 border-r border-slate-300 text-center font-mono font-bold text-slate-900">{score}</td>
+                    <td className="p-2.5 border-r border-slate-300 text-center font-black">{grade}</td>
+                    <td className="p-2.5 text-slate-600 font-medium">{isPass ? "Satisfactory" : "Needs Improvement"}</td>
+                  </tr>
+                );
+              })}
+              {/* Summary Totals Row */}
+              <tr className="bg-slate-900 text-white font-extrabold text-xs">
+                <td colSpan={2} className="p-3 uppercase tracking-wider text-right">Aggregated Total Score:</td>
+                <td className="p-3 text-center font-mono">{res.totalMax}</td>
+                <td className="p-3 text-center font-mono text-amber-300 text-sm">{res.totalObtained}</td>
+                <td className="p-3 text-center text-amber-300">{res.grade}</td>
+                <td className="p-3">{res.percentage}% ({res.status})</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Summary & Verification Bar */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-slate-200 items-center">
+          <div>
+            <span className="block text-[10px] text-slate-400 font-bold uppercase">Position in Class</span>
+            <strong className="text-sm font-black text-slate-900">{res.positionSuffix} Position</strong>
+          </div>
+
+          <div>
+            <span className="block text-[10px] text-slate-400 font-bold uppercase">Overall Performance</span>
+            <strong className="text-xs font-bold text-slate-800">
+              {res.percentage >= 80 ? "Passed with Distinction" : res.percentage >= 60 ? "First Division" : "Second Division"}
+            </strong>
+          </div>
+
+          {/* QR Code Verification representation */}
+          <div className="flex items-center gap-2 justify-end">
+            <div className="text-right">
+              <span className="block text-[8px] font-bold text-slate-400 uppercase">Verification QR</span>
+              <span className="text-[9px] font-mono text-slate-500">DMC-{res.student.id}</span>
+            </div>
+            <div className="w-12 h-12 bg-slate-900 rounded p-1 flex items-center justify-center shrink-0">
+              <div className="w-full h-full bg-white p-0.5 rounded flex flex-col justify-between">
+                <div className="flex justify-between"><div className="w-2 h-2 bg-black" /><div className="w-2 h-2 bg-black" /></div>
+                <div className="flex justify-between"><div className="w-2 h-2 bg-black" /><div className="w-2 h-2 bg-black" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Signatures */}
+        <div className="pt-10 flex justify-between items-end">
+          <div className="text-center w-36">
+            <div className="border-b border-slate-400 mb-1" />
+            <span className="text-[10px] text-slate-500 font-bold uppercase">Class Teacher</span>
+          </div>
+
+          <div className="text-center w-28 h-20 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center text-[9px] text-slate-400 font-bold uppercase">
+            School Stamp
+          </div>
+
+          <div className="text-center w-36">
+            <div className="border-b border-slate-400 mb-1" />
+            <span className="text-[10px] text-slate-500 font-bold uppercase">Principal Signature</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Dedicated Student Role Result Portal
+  if (activeRole === "Student") {
+    const studentRes = activeDmcStudent
+      ? studentResults.find((r) => r.student.id === activeDmcStudent.id)
+      : null;
+
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto" id="student-result-portal-root">
+        {/* Banner */}
+        <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-6 md:p-8 shadow-xl text-center space-y-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border border-amber-400/30">
+            <Award className="w-4 h-4 text-amber-400" /> {schoolConfig?.schoolName || "Citizen School & College"}
+          </div>
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+            Student Result & Official DMC Portal
+          </h1>
+          <p className="text-xs md:text-sm text-slate-300 max-w-md mx-auto font-medium">
+            Apna Name, Roll Number ya Admission Number enter krein aur apni Official DMC (Detailed Marks Certificate) dekhein aur print krein.
+          </p>
+        </div>
+
+        {/* Search Box */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+          <label className="block text-xs font-black text-slate-800 uppercase tracking-wider">
+            Student DMC Result Search
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                placeholder="Enter Student Name (e.g., Ali, Kamran, Ayesha) or Roll No..."
+                value={studentPortalQuery}
+                onChange={(e) => setStudentPortalQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleStudentPortalSearch();
+                }}
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
+            </div>
+            <button
+              onClick={() => handleStudentPortalSearch()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Search className="w-4 h-4" /> Search DMC
+            </button>
+          </div>
+
+          {/* Quick Logged-in Button */}
+          {loggedInUser && "name" in loggedInUser && (
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-blue-50/80 border border-blue-200 rounded-xl text-xs">
+              <span className="text-slate-700 font-semibold">
+                Logged in Student: <strong className="text-blue-900 font-bold">{loggedInUser.name}</strong> {"class" in loggedInUser && loggedInUser.class ? `(${loggedInUser.class})` : ""}
+              </span>
+              <button
+                onClick={() => {
+                  setStudentPortalQuery(loggedInUser.name);
+                  handleStudentPortalSearch(loggedInUser.name);
+                }}
+                className="text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg shadow-xs transition cursor-pointer"
+              >
+                View My DMC Result
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* DMC Result Card View */}
+        {studentRes ? (
+          renderDmcCard(studentRes)
+        ) : activeDmcStudent ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center text-xs font-bold text-amber-800 space-y-2">
+            <p className="text-sm font-extrabold text-amber-900">Result in Progress</p>
+            <p>Result record is currently being processed for {activeDmcStudent.name} ({activeDmcStudent.class}).</p>
+            <p className="text-[11px] font-normal text-amber-700">Please check again after teachers publish final exam marks.</p>
+          </div>
+        ) : (
+          <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-3 shadow-xs">
+            <Award className="w-12 h-12 text-blue-500 mx-auto" />
+            <h3 className="text-sm font-black text-slate-800 uppercase">Search Your Official DMC Result</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto font-medium">
+              Upar box me apna name ya roll number likhen aur "Search DMC" dabayein taake aapki DMC result sheet screen par show ho jaye.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" id="result-management-root">

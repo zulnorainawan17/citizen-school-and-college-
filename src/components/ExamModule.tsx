@@ -16,7 +16,7 @@ import {
   FileText,
   Sparkles,
 } from "lucide-react";
-import { Student, ExamSchedule, GradeRecord, GRADE_LEVELS, SchoolConfig } from "../types";
+import { Student, Teacher, ExamSchedule, GradeRecord, GRADE_LEVELS, SchoolConfig } from "../types";
 import { saveExamSchedule, deleteExamSchedule, saveGradeRecord } from "../lib/firestoreService";
 import { ResultManagementModule } from "./ResultManagementModule";
 
@@ -118,6 +118,8 @@ interface ExamModuleProps {
   grades: GradeRecord[];
   setGrades: React.Dispatch<React.SetStateAction<GradeRecord[]>>;
   schoolConfig?: SchoolConfig;
+  activeRole?: string;
+  loggedInUser?: Student | Teacher | null;
 }
 
 export function ExamModule({
@@ -127,6 +129,8 @@ export function ExamModule({
   grades,
   setGrades,
   schoolConfig,
+  activeRole,
+  loggedInUser,
 }: ExamModuleProps) {
   const [activeSubTab, setActiveSubTab] = useState<"results" | "schedule" | "marks" | "reports" | "toppers">("results");
 
@@ -934,6 +938,8 @@ export function ExamModule({
           grades={grades}
           setGrades={setGrades}
           schoolConfig={schoolConfig}
+          activeRole={activeRole}
+          loggedInUser={loggedInUser}
         />
       )}
 

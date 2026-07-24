@@ -85,11 +85,8 @@ export function Sidebar({
     ];
 
     const studentItems = [
-      { id: "profile", label: "My Profile", icon: Users },
-      { id: "attendance", label: "My Attendance", icon: UserCheck },
+      { id: "students", label: "Student Directory", icon: GraduationCap },
       { id: "exams", label: "My Results", icon: ClipboardList },
-      { id: "timetable", label: "My Timetable", icon: Calendar },
-      { id: "ai-tools", label: "AI Tutor Chat", icon: Sparkles },
     ];
 
     const parentItems = [

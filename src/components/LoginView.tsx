@@ -18,7 +18,10 @@ import { subscribeToCollection } from "../lib/firestoreService";
 import { initialStudents, initialTeachers } from "../data/mockData";
 
 interface LoginViewProps {
-  onLoginSuccess: (role: "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent") => void;
+  onLoginSuccess: (
+    role: "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent",
+    userObj?: Student | Teacher | null
+  ) => void;
 }
 
 export function LoginView({ onLoginSuccess }: LoginViewProps) {
@@ -138,7 +141,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
     }
     setSuccessMessage(`Welcome ${selectedTeacher.name}! Accessing Teacher Portal...`);
     setTimeout(() => {
-      onLoginSuccess("Teacher");
+      onLoginSuccess("Teacher", selectedTeacher);
     }, 400);
   };
 
@@ -156,7 +159,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
     }
     setSuccessMessage(`Welcome ${selectedStudent.name}! Accessing Student Portal...`);
     setTimeout(() => {
-      onLoginSuccess("Student");
+      onLoginSuccess("Student", selectedStudent);
     }, 400);
   };
 
@@ -172,7 +175,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
             <School className="w-8 h-8 text-amber-400" />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white">
-            Beacon Hill ERP Portal
+            Citizen School & College ERP
           </h1>
           <p className="text-xs text-slate-300 mt-1 font-medium">
             Select your portal below to log into the school management system
