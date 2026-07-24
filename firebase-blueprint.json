@@ -1,8 +1,100 @@
 {
   "entities": {
+    "students": {
+      "title": "Students",
+      "description": "Student admission and academic profiles",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "admissionNo": { "type": "string" },
+        "rollNo": { "type": "string" },
+        "name": { "type": "string" },
+        "class": { "type": "string" },
+        "section": { "type": "string" },
+        "dob": { "type": "string" },
+        "gender": { "type": "string" },
+        "guardianName": { "type": "string" },
+        "guardianPhone": { "type": "string" },
+        "guardianEmail": { "type": "string" },
+        "emergencyContact": { "type": "string" },
+        "address": { "type": "string" },
+        "admissionDate": { "type": "string" },
+        "medicalRecord": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["admissionNo", "name", "class"]
+    },
+    "teachers": {
+      "title": "Teachers",
+      "description": "Faculty and teacher management records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "department": { "type": "string" },
+        "qualification": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["name", "email", "department"]
+    },
+    "staff": {
+      "title": "Staff",
+      "description": "Non-teaching school staff records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "phone": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["name", "role"]
+    },
+    "attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance logs for students, teachers, and staff",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "entityId": { "type": "string" },
+        "entityType": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["date", "entityId", "status"]
+    },
+    "feeInvoices": {
+      "title": "Fee Invoices",
+      "description": "Student fee vouchers and payment records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNo": { "type": "string" },
+        "studentId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["invoiceNo", "studentId", "status"]
+    },
+    "grades": {
+      "title": "Grade Records",
+      "description": "Exam performance and marks records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "examName": { "type": "string" },
+        "subject": { "type": "string" },
+        "marksObtained": { "type": "number" },
+        "maxMarks": { "type": "number" }
+      },
+      "required": ["studentId", "examName", "subject", "marksObtained"]
+    },
     "exam_papers": {
       "title": "Exam Papers",
-      "description": "Composed and generated school examination papers saved in Firestore database",
+      "description": "Composed and generated examination papers",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -10,12 +102,39 @@
         "examTitle": { "type": "string" },
         "subject": { "type": "string" },
         "grade": { "type": "string" },
-        "timeAllowed": { "type": "string" },
-        "maxMarks": { "type": "string" },
-        "content": { "type": "string" },
-        "createdAt": { "type": "string" }
+        "content": { "type": "string" }
       },
       "required": ["schoolName", "examTitle", "subject", "grade", "content"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": "students",
+      "description": "Collection of student records"
+    },
+    "/teachers/{teacherId}": {
+      "schema": "teachers",
+      "description": "Collection of teacher records"
+    },
+    "/staff/{staffId}": {
+      "schema": "staff",
+      "description": "Collection of staff records"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "attendance",
+      "description": "Collection of attendance logs"
+    },
+    "/feeInvoices/{invoiceId}": {
+      "schema": "feeInvoices",
+      "description": "Collection of fee invoices"
+    },
+    "/grades/{gradeId}": {
+      "schema": "grades",
+      "description": "Collection of academic grades"
+    },
+    "/exam_papers/{paperId}": {
+      "schema": "exam_papers",
+      "description": "Collection of exam papers"
     }
   }
 }

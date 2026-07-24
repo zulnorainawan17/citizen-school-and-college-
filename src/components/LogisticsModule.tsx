@@ -21,6 +21,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Homework, TimetableItem, LibraryBook, TransportRoute, HostelRoom, InventoryItem, GRADE_LEVELS, Teacher } from "../types";
+import { saveHomework, deleteHomework, saveBook, deleteBook, saveTransportRoute, deleteTransportRoute, saveHostelRoom, deleteHostelRoom, saveInventoryItem, deleteInventoryItem } from "../lib/firestoreService";
 
 interface LogisticsModuleProps {
   homework: Homework[];

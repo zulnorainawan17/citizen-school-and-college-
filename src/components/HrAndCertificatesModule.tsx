@@ -46,21 +46,7 @@ export function HrAndCertificatesModule({
   const [isViewingCertificate, setIsViewingCertificate] = useState(false);
 
   // Quick prefill templates state
-  const [prefillTemplates, setPrefillTemplates] = useState<PrefillTemplate[]>(() => {
-    const saved = localStorage.getItem("certificate_prefills");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return DEFAULT_PREFILLS;
-      }
-    }
-    return DEFAULT_PREFILLS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem("certificate_prefills", JSON.stringify(prefillTemplates));
-  }, [prefillTemplates]);
+  const [prefillTemplates, setPrefillTemplates] = useState<PrefillTemplate[]>(DEFAULT_PREFILLS);
 
   const [deletingPrefill, setDeletingPrefill] = useState<PrefillTemplate | null>(null);
 

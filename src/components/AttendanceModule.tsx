@@ -12,6 +12,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { Student, Teacher, Staff, AttendanceRecord, GRADE_LEVELS } from "../types";
+import { saveAttendanceBatch } from "../lib/firestoreService";
 
 interface AttendanceModuleProps {
   students: Student[];
@@ -48,9 +49,11 @@ export function AttendanceModule({
       (a) => a.date === selectedDate && a.entityId === entityId && a.entityType === entityType
     );
 
+    let recToSave: AttendanceRecord;
     if (existingIdx > -1) {
       const updated = [...attendance];
       updated[existingIdx].status = status;
+      recToSave = updated[existingIdx];
       setAttendance(updated);
     } else {
       const newRecord: AttendanceRecord = {
@@ -60,8 +63,11 @@ export function AttendanceModule({
         entityType,
         status,
       };
+      recToSave = newRecord;
       setAttendance([...attendance, newRecord]);
     }
+
+    saveAttendanceBatch([recToSave]);
 
     // Trigger Mock SMS Alert if marked Absent for a student
     if (entityType === "student" && status === "Absent") {
@@ -82,6 +88,8 @@ export function AttendanceModule({
   // Mark all listed as Present helper
   const handleMarkAllPresent = (entitiesList: any[]) => {
     const newRecords: AttendanceRecord[] = [];
+    const allModified: AttendanceRecord[] = [];
+
     entitiesList.forEach((ent) => {
       const existingIdx = attendance.findIndex(
         (a) => a.date === selectedDate && a.entityId === ent.id && a.entityType === entityType
@@ -89,14 +97,17 @@ export function AttendanceModule({
 
       if (existingIdx > -1) {
         attendance[existingIdx].status = "Present";
+        allModified.push(attendance[existingIdx]);
       } else {
-        newRecords.push({
+        const rec: AttendanceRecord = {
           id: `ATT_${Date.now()}_${ent.id}`,
           date: selectedDate,
           entityId: ent.id,
           entityType,
           status: "Present",
-        });
+        };
+        newRecords.push(rec);
+        allModified.push(rec);
       }
     });
 
@@ -105,6 +116,8 @@ export function AttendanceModule({
     } else {
       setAttendance([...attendance]);
     }
+
+    saveAttendanceBatch(allModified);
     alert("All listed individuals marked as Present.");
   };
 

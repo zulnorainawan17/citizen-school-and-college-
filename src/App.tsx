@@ -56,6 +56,12 @@ import {
   Holiday,
   SchoolConfig,
 } from "./types";
+import {
+  subscribeToCollection,
+  subscribeToDoc,
+  saveSchoolConfig,
+  testFirestoreConnection,
+} from "./lib/firestoreService";
 import { Palette, Check } from "lucide-react";
 
 interface ThemePreset {
@@ -155,84 +161,73 @@ export default function App() {
     return false;
   });
 
-  // Core App states
-  const [schoolConfig, setSchoolConfig] = useState<SchoolConfig>(() => {
-    const saved = localStorage.getItem("erp_school_config");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return initialSchoolConfig;
-      }
-    }
-    return initialSchoolConfig;
-  });
+  // Core App states backed by Firestore Realtime DB
+  const [schoolConfig, setSchoolConfig] = useState<SchoolConfig>(initialSchoolConfig);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [students, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem("erp_students");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return initialStudents;
-      }
-    }
-    return initialStudents;
-  });
+  const [students, setStudents] = useState<Student[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [invoices, setInvoices] = useState<FeeInvoice[]>([]);
+  const [feeStructures, setFeeStructures] = useState<FeeStructure[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [examSchedules, setExamSchedules] = useState<ExamSchedule[]>([]);
+  const [grades, setGrades] = useState<GradeRecord[]>([]);
+  const [homework, setHomework] = useState<Homework[]>([]);
+  const [timetable, setTimetable] = useState<TimetableItem[]>([]);
+  const [books, setBooks] = useState<LibraryBook[]>([]);
+  const [routes, setRoutes] = useState<TransportRoute[]>([]);
+  const [rooms, setRooms] = useState<HostelRoom[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [payroll, setPayroll] = useState<Payslip[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
 
-  const [teachers, setTeachers] = useState<Teacher[]>(() => {
-    const saved = localStorage.getItem("erp_teachers");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return initialTeachers;
-      }
-    }
-    return initialTeachers;
-  });
-
+  // Subscribe to real-time online Firestore database for every module
   useEffect(() => {
-    localStorage.setItem("erp_students", JSON.stringify(students));
-  }, [students]);
+    testFirestoreConnection();
 
-  useEffect(() => {
-    localStorage.setItem("erp_teachers", JSON.stringify(teachers));
-  }, [teachers]);
+    const unsubStudents = subscribeToCollection<Student>("students", setStudents, initialStudents);
+    const unsubTeachers = subscribeToCollection<Teacher>("teachers", setTeachers, initialTeachers);
+    const unsubStaff = subscribeToCollection<Staff>("staff", setStaff, initialStaff);
+    const unsubInvoices = subscribeToCollection<FeeInvoice>("feeInvoices", setInvoices, initialFeeInvoices);
+    const unsubFeeStructures = subscribeToCollection<FeeStructure>("feeStructures", setFeeStructures, initialFeeStructures);
+    const unsubAttendance = subscribeToCollection<AttendanceRecord>("attendance", setAttendance, initialAttendance);
+    const unsubExams = subscribeToCollection<ExamSchedule>("examSchedules", setExamSchedules, initialExamSchedules);
+    const unsubGrades = subscribeToCollection<GradeRecord>("grades", setGrades, initialGrades);
+    const unsubHomework = subscribeToCollection<Homework>("homeworks", setHomework, initialHomeworks);
+    const unsubTimetable = subscribeToCollection<TimetableItem>("classRoutines", setTimetable, initialClassRoutines);
+    const unsubBooks = subscribeToCollection<LibraryBook>("books", setBooks, initialBooks);
+    const unsubRoutes = subscribeToCollection<TransportRoute>("transportRoutes", setRoutes, initialTransportRoutes);
+    const unsubRooms = subscribeToCollection<HostelRoom>("hostelRooms", setRooms, initialHostelRooms);
+    const unsubInventory = subscribeToCollection<InventoryItem>("inventory", setInventory, initialInventory);
+    const unsubPayroll = subscribeToCollection<Payslip>("payroll", setPayroll, initialPayroll);
+    const unsubLeave = subscribeToCollection<LeaveRequest>("leaveRequests", setLeaveRequests, initialLeaveRequests);
+    const unsubHolidays = subscribeToCollection<Holiday>("holidays", setHolidays, initialHolidays);
+    const unsubSchoolConfig = subscribeToDoc<SchoolConfig>("schoolConfig", "main", setSchoolConfig, initialSchoolConfig);
 
-  const [staff, setStaff] = useState<Staff[]>(initialStaff);
-  const [invoices, setInvoices] = useState<FeeInvoice[]>(() => {
-    const saved = localStorage.getItem("erp_invoices");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return initialFeeInvoices;
-      }
-    }
-    return initialFeeInvoices;
-  });
+    return () => {
+      unsubStudents();
+      unsubTeachers();
+      unsubStaff();
+      unsubInvoices();
+      unsubFeeStructures();
+      unsubAttendance();
+      unsubExams();
+      unsubGrades();
+      unsubHomework();
+      unsubTimetable();
+      unsubBooks();
+      unsubRoutes();
+      unsubRooms();
+      unsubInventory();
+      unsubPayroll();
+      unsubLeave();
+      unsubHolidays();
+      unsubSchoolConfig();
+    };
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem("erp_invoices", JSON.stringify(invoices));
-  }, [invoices]);
-  const [feeStructures, setFeeStructures] = useState<FeeStructure[]>(initialFeeStructures);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>(initialAttendance);
-  const [examSchedules, setExamSchedules] = useState<ExamSchedule[]>(initialExamSchedules);
-  const [grades, setGrades] = useState<GradeRecord[]>(initialGrades);
-  const [homework, setHomework] = useState<Homework[]>(initialHomeworks);
-  const [timetable, setTimetable] = useState<TimetableItem[]>(initialClassRoutines);
-  const [books, setBooks] = useState<LibraryBook[]>(initialBooks);
-  const [routes, setRoutes] = useState<TransportRoute[]>(initialTransportRoutes);
-  const [rooms, setRooms] = useState<HostelRoom[]>(initialHostelRooms);
-  const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
-  const [payroll, setPayroll] = useState<Payslip[]>(initialPayroll);
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(initialLeaveRequests);
-  const [holidays] = useState<Holiday[]>(initialHolidays);
-
-  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
-    return localStorage.getItem("erp_active_theme") || "olive";
-  });
+  const [activeThemeId, setActiveThemeId] = useState<string>("olive");
 
   // Apply active theme CSS custom properties
   useEffect(() => {
@@ -245,7 +240,6 @@ export default function App() {
     root.style.setProperty('--color-brand-text-light', selectedTheme.textLight);
     root.style.setProperty('--color-brand-success', selectedTheme.success);
     root.style.setProperty('--color-brand-warning', selectedTheme.warning);
-    localStorage.setItem("erp_active_theme", selectedTheme.id);
   }, [activeThemeId]);
 
   // Ensure active tab is allowed for the active role when role changes
@@ -256,15 +250,16 @@ export default function App() {
     }
   }, [activeRole]);
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     setSaveStatus("saving");
-    localStorage.setItem("erp_school_config", JSON.stringify(schoolConfig));
-    setTimeout(() => {
+    try {
+      await saveSchoolConfig(schoolConfig);
       setSaveStatus("saved");
-      setTimeout(() => {
-        setSaveStatus("idle");
-      }, 3000);
-    }, 800);
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch (err) {
+      console.error("Error saving school config to Firestore:", err);
+      setSaveStatus("idle");
+    }
   };
 
   const getAllowedTabsForRole = (role: string): string[] => {

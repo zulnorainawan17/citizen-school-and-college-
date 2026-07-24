@@ -18,6 +18,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Student, FeeInvoice, FeeStructure, GRADE_LEVELS, SchoolConfig } from "../types";
+import { saveFeeInvoice, deleteFeeInvoice, saveFeeStructure } from "../lib/firestoreService";
 
 interface FeeModuleProps {
   students: Student[];
@@ -208,20 +209,18 @@ export function FeeModule({
 
     if (editingStructure) {
       // update
+      const updatedStructure: FeeStructure = {
+        ...editingStructure,
+        className: structureFormData.className,
+        monthlyFee: Number(structureFormData.monthlyFee),
+        admissionFee: Number(structureFormData.admissionFee),
+        examFee: Number(structureFormData.examFee),
+        transportFee: Number(structureFormData.transportFee),
+        hostelFee: Number(structureFormData.hostelFee),
+      };
+      saveFeeStructure(updatedStructure);
       setFeeStructures((prev) =>
-        prev.map((f) =>
-          f.id === editingStructure.id
-            ? {
-                ...f,
-                className: structureFormData.className,
-                monthlyFee: Number(structureFormData.monthlyFee),
-                admissionFee: Number(structureFormData.admissionFee),
-                examFee: Number(structureFormData.examFee),
-                transportFee: Number(structureFormData.transportFee),
-                hostelFee: Number(structureFormData.hostelFee),
-              }
-            : f
-        )
+        prev.map((f) => (f.id === editingStructure.id ? updatedStructure : f))
       );
       setEditingStructure(null);
     } else {
@@ -235,6 +234,7 @@ export function FeeModule({
         transportFee: Number(structureFormData.transportFee),
         hostelFee: Number(structureFormData.hostelFee),
       };
+      saveFeeStructure(newStructure);
       setFeeStructures((prev) => [...prev, newStructure]);
       setIsCreatingStructure(false);
     }
@@ -288,18 +288,16 @@ export function FeeModule({
     if (!payingInvoice) return;
 
     const receiptNo = `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const updated = invoices.map((inv) => {
-      if (inv.id === payingInvoice.id) {
-        return {
-          ...inv,
-          status: "Paid" as const,
-          paymentDate: new Date().toISOString().split("T")[0],
-          paymentMethod,
-          receiptNo,
-        };
-      }
-      return inv;
-    });
+    const updatedInvoice: FeeInvoice = {
+      ...payingInvoice,
+      status: "Paid" as const,
+      paymentDate: new Date().toISOString().split("T")[0],
+      paymentMethod,
+      receiptNo,
+    };
+    saveFeeInvoice(updatedInvoice);
+
+    const updated = invoices.map((inv) => (inv.id === payingInvoice.id ? updatedInvoice : inv));
 
     setInvoices(updated);
     alert(`Payment recorded successfully! Receipt generated: ${receiptNo}`);
@@ -328,6 +326,7 @@ export function FeeModule({
       status: "Pending",
     };
 
+    saveFeeInvoice(newInvoice);
     setInvoices([newInvoice, ...invoices]);
     alert(`Invoice issued successfully! Invoice No: ${invoiceNo}`);
     setIsCreatingInvoice(false);
@@ -349,6 +348,7 @@ export function FeeModule({
 
   const handleConfirmDeleteInvoice = () => {
     if (deletingInvoice) {
+      deleteFeeInvoice(deletingInvoice.id);
       setInvoices((prev) => prev.filter((inv) => inv.id !== deletingInvoice.id));
       if (selectedInvoice?.id === deletingInvoice.id) {
         setSelectedInvoice(null);

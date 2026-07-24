@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Student, ExamSchedule, GradeRecord, GRADE_LEVELS, SchoolConfig } from "../types";
+import { saveExamSchedule, deleteExamSchedule, saveGradeRecord } from "../lib/firestoreService";
 import { ResultManagementModule } from "./ResultManagementModule";
 
 export const getSubjectsForClass = (className: string): string[] => {
@@ -678,12 +679,18 @@ export function ExamModule({
       );
     }
     
+    newSchedules.forEach((sch) => saveExamSchedule(sch));
+    
     setExamSchedules((prev) => {
       let filtered = prev;
       if (!shouldKeepExisting) {
-        filtered = prev.filter(
-          (ex) => !(ex.className === builderTargetClass && ex.examName === builderExamName)
-        );
+        filtered = prev.filter((ex) => {
+          const isTarget = ex.className === builderTargetClass && ex.examName === builderExamName;
+          if (isTarget) {
+            deleteExamSchedule(ex.id);
+          }
+          return !isTarget;
+        });
       }
       return [...filtered, ...newSchedules];
     });
@@ -725,20 +732,18 @@ export function ExamModule({
 
     if (editingSchedule) {
       // update
+      const updatedSchedule: ExamSchedule = {
+        ...editingSchedule,
+        examName: scheduleFormData.examName,
+        className: scheduleFormData.className,
+        subject: scheduleFormData.subject,
+        examDate: scheduleFormData.examDate,
+        time: scheduleFormData.time,
+        room: scheduleFormData.room,
+      };
+      saveExamSchedule(updatedSchedule);
       setExamSchedules((prev) =>
-        prev.map((item) =>
-          item.id === editingSchedule.id
-            ? {
-                ...item,
-                examName: scheduleFormData.examName,
-                className: scheduleFormData.className,
-                subject: scheduleFormData.subject,
-                examDate: scheduleFormData.examDate,
-                time: scheduleFormData.time,
-                room: scheduleFormData.room,
-              }
-            : item
-        )
+        prev.map((item) => (item.id === editingSchedule.id ? updatedSchedule : item))
       );
       setEditingSchedule(null);
     } else {
@@ -752,6 +757,7 @@ export function ExamModule({
         time: scheduleFormData.time,
         room: scheduleFormData.room,
       };
+      saveExamSchedule(newItem);
       setExamSchedules((prev) => [...prev, newItem]);
       setIsCreatingSchedule(false);
     }
@@ -760,6 +766,7 @@ export function ExamModule({
   const handleDeleteSchedule = (id: string) => {
     if (!setExamSchedules) return;
     if (confirm("Are you sure you want to delete this date sheet entry?")) {
+      deleteExamSchedule(id);
       setExamSchedules((prev) => prev.filter((item) => item.id !== id));
     }
   };
@@ -806,11 +813,13 @@ export function ExamModule({
           g.className === selectedClass
       );
 
+      let gradeRecToSave: GradeRecord;
       if (existingIdx > -1) {
         updatedGrades[existingIdx].marksObtained = marksObtained;
         updatedGrades[existingIdx].grade = grade;
+        gradeRecToSave = updatedGrades[existingIdx];
       } else {
-        updatedGrades.push({
+        gradeRecToSave = {
           id: `GRD_${Date.now()}_${student.id}`,
           studentId: student.id,
           studentName: student.name,
@@ -820,8 +829,10 @@ export function ExamModule({
           marksObtained,
           maxMarks,
           grade,
-        });
+        };
+        updatedGrades.push(gradeRecToSave);
       }
+      saveGradeRecord(gradeRecToSave);
     });
 
     setGrades(updatedGrades);

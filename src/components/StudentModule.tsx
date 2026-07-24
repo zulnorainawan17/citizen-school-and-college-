@@ -19,6 +19,7 @@ import {
   Printer,
 } from "lucide-react";
 import { Student, GRADE_LEVELS, FeeInvoice, FeeStructure } from "../types";
+import { saveStudent, deleteStudent, saveFeeInvoice } from "../lib/firestoreService";
 
 interface StudentModuleProps {
   students: Student[];
@@ -133,6 +134,7 @@ export function StudentModule({
 
   const handleConfirmDeleteStudent = () => {
     if (deletingStudent) {
+      deleteStudent(deletingStudent.id);
       setStudents((prev) => prev.filter((s) => s.id !== deletingStudent.id));
       if (selectedStudent?.id === deletingStudent.id) {
         setSelectedStudent(null);
@@ -150,12 +152,18 @@ export function StudentModule({
       nextGrade = GRADE_LEVELS[currentIndex + 1];
     }
 
-    const updated = students.map((s) => (s.id === student.id ? { ...s, class: nextGrade } : s));
+    const updatedStudent = { ...student, class: nextGrade };
+    saveStudent(updatedStudent);
+    const updated = students.map((s) => (s.id === student.id ? updatedStudent : s));
     setStudents(updated);
     alert(`Student ${student.name} was successfully promoted to ${nextGrade}!`);
   };
 
   const handleWithdrawStudent = (studentId: string) => {
+    const st = students.find((s) => s.id === studentId);
+    if (st) {
+      saveStudent({ ...st, status: "Withdrawn" as const });
+    }
     const updated = students.map((s) => (s.id === studentId ? { ...s, status: "Withdrawn" as const } : s));
     setStudents(updated);
     alert("Student status marked as Withdrawn.");
@@ -163,6 +171,10 @@ export function StudentModule({
   };
 
   const handleTransferStudent = (studentId: string) => {
+    const st = students.find((s) => s.id === studentId);
+    if (st) {
+      saveStudent({ ...st, status: "Transferred" as const });
+    }
     const updated = students.map((s) => (s.id === studentId ? { ...s, status: "Transferred" as const } : s));
     setStudents(updated);
     alert("Student status marked as Transferred.");
@@ -181,7 +193,7 @@ export function StudentModule({
     const eFee = formData.examFee !== undefined ? Number(formData.examFee) : 50;
 
     if (viewMode === "create") {
-      const newId = `STU${String(students.length + 1).padStart(3, "0")}`;
+      const newId = `STU${String(Date.now()).slice(-4)}`;
       const admissionNo = formData.admissionNo || `ADM2026${String(students.length + 1).padStart(3, "0")}`;
       const rollNo = formData.rollNo || String(students.filter((s) => s.class === formData.class).length + 1).padStart(2, "0");
 
@@ -208,6 +220,7 @@ export function StudentModule({
         examFee: eFee,
       };
 
+      saveStudent(newStudent);
       setStudents([...students, newStudent]);
 
       // Automatically issue pending invoice for August 2026 using customized fee
@@ -226,18 +239,22 @@ export function StudentModule({
           total: mFee,
           status: "Pending",
         };
+        saveFeeInvoice(newInvoice);
         setInvoices((prev) => [newInvoice, ...prev]);
       }
     } else {
       // Edit mode
       if (!selectedStudent) return;
-      const updated = students.map((s) => (s.id === selectedStudent.id ? {
-        ...s,
+      const updatedStudent: Student = {
+        ...selectedStudent,
         ...formData,
         monthlyFee: mFee,
         admissionFee: aFee,
         examFee: eFee,
-      } : s)) as Student[];
+      } as Student;
+
+      saveStudent(updatedStudent);
+      const updated = students.map((s) => (s.id === selectedStudent.id ? updatedStudent : s));
       setStudents(updated);
 
       // Automatically update any "Pending" invoices for this student to match the updated customized fee
@@ -245,13 +262,15 @@ export function StudentModule({
         setInvoices((prev) =>
           prev.map((inv) => {
             if (inv.studentId === selectedStudent.id && inv.status === "Pending") {
-              return {
+              const updatedInv = {
                 ...inv,
                 studentName: formData.name || inv.studentName,
                 className: formData.class || inv.className,
                 amount: mFee,
                 total: mFee + Number(inv.fine) - Number(inv.discount),
               };
+              saveFeeInvoice(updatedInv);
+              return updatedInv;
             }
             return inv;
           })

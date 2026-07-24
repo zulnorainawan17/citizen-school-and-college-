@@ -13,6 +13,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import { Teacher, TEACHER_DEPARTMENTS } from "../types";
+import { saveTeacher, deleteTeacher } from "../lib/firestoreService";
 
 interface TeacherModuleProps {
   teachers: Teacher[];
@@ -87,6 +88,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
 
   const handleConfirmDeleteTeacher = () => {
     if (deletingTeacher) {
+      deleteTeacher(deletingTeacher.id);
       setTeachers((prev) => prev.filter((t) => t.id !== deletingTeacher.id));
       if (selectedTeacher?.id === deletingTeacher.id) {
         setSelectedTeacher(null);
@@ -104,7 +106,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
     }
 
     if (viewMode === "register") {
-      const newId = `TCH${String(teachers.length + 1).padStart(3, "0")}`;
+      const newId = `TCH${String(Date.now()).slice(-4)}`;
       const newTeacher: Teacher = {
         id: newId,
         name: formData.name || "",
@@ -119,10 +121,13 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
         status: "Active",
         photoUrl: formData.photoUrl || "https://lh3.googleusercontent.com/d/1Hos9xJeQeARHO4qQPuhCnCjSUXGiVEZe=s1000",
       };
+      saveTeacher(newTeacher);
       setTeachers([...teachers, newTeacher]);
     } else {
       if (!selectedTeacher) return;
-      const updated = teachers.map((t) => (t.id === selectedTeacher.id ? { ...t, ...formData } : t)) as Teacher[];
+      const updatedTeacher: Teacher = { ...selectedTeacher, ...formData } as Teacher;
+      saveTeacher(updatedTeacher);
+      const updated = teachers.map((t) => (t.id === selectedTeacher.id ? updatedTeacher : t));
       setTeachers(updated);
     }
 
