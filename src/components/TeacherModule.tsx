@@ -384,16 +384,59 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
               />
             </div>
 
-            {/* Photo URL */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Photo Reference URL</label>
-              <input
-                type="text"
-                value={formData.photoUrl || ""}
-                onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                placeholder="https://lh3.googleusercontent.com/d/..."
-                className="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 focus:outline-hidden"
-              />
+            {/* Photo Upload (File or URL) */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">
+                Teacher Photo (Upload PNG / JPEG or Paste URL)
+              </label>
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                {formData.photoUrl ? (
+                  <img
+                    src={formData.photoUrl}
+                    alt="Teacher Preview"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500 shrink-0 shadow-xs"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0 border border-slate-300">
+                    No Pic
+                  </div>
+                )}
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormData({ ...formData, photoUrl: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer"
+                    />
+                    {formData.photoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, photoUrl: "" })}
+                        className="text-[10px] font-bold text-red-600 hover:underline shrink-0"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.photoUrl || ""}
+                    onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
+                    placeholder="Or paste image URL link (e.g. https://...)"
+                    className="w-full text-[11px] border border-slate-200 rounded-lg p-1.5 bg-white text-slate-700 focus:outline-hidden"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import {
   deleteDoc,
   onSnapshot,
   getDocs,
+  getDoc,
   writeBatch,
   getDocFromServer
 } from "firebase/firestore";
@@ -105,6 +106,19 @@ export function subscribeToCollection<T extends { id: string }>(
       if (snapshot.empty && initialDataIfEmpty && initialDataIfEmpty.length > 0 && !isSeeding) {
         isSeeding = true;
         try {
+          const metaRef = doc(db, "_metadata", `seed_${collectionName}`);
+          const metaSnap = await getDoc(metaRef);
+
+          if (metaSnap.exists()) {
+            // Already seeded previously; user intentionally deleted all documents
+            onData([]);
+            isSeeding = false;
+            return;
+          }
+
+          // Mark as seeded first to prevent re-seeding loop
+          await setDoc(metaRef, { seededAt: new Date().toISOString() });
+
           const batch = writeBatch(db);
           initialDataIfEmpty.forEach((item) => {
             const docId = item.id || doc(colRef).id;
@@ -118,6 +132,16 @@ export function subscribeToCollection<T extends { id: string }>(
           isSeeding = false;
         }
         return;
+      }
+
+      // If collection has documents, ensure metadata flag exists so future empty state won't trigger re-seed
+      if (!snapshot.empty) {
+        const metaRef = doc(db, "_metadata", `seed_${collectionName}`);
+        getDoc(metaRef).then((metaSnap) => {
+          if (!metaSnap.exists()) {
+            setDoc(metaRef, { seededAt: new Date().toISOString() });
+          }
+        }).catch(() => {});
       }
 
       const items: T[] = snapshot.docs.map((docSnap) => ({
