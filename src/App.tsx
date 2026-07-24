@@ -292,6 +292,16 @@ export default function App() {
     }
   };
 
+  // Enforce role isolation - automatically sanitize activeTab to allowed tabs for activeRole
+  useEffect(() => {
+    if (isAuthenticated) {
+      const allowed = getAllowedTabsForRole(activeRole);
+      if (!allowed.includes(activeTab)) {
+        setActiveTab(allowed[0] || "dashboard");
+      }
+    }
+  }, [activeRole, activeTab, isAuthenticated]);
+
   const handleLoginSuccess = (
     role: "Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent",
     userObj?: Student | Teacher | null
@@ -631,6 +641,7 @@ export default function App() {
               collapsed={collapsed}
               setCollapsed={setCollapsed}
               authUser={authUser}
+              loggedInUser={loggedInUser}
               handleLogout={handleLogout}
             />
             <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-brand-bg relative">

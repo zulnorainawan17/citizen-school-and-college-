@@ -789,12 +789,13 @@ export function ExamModule({
   // Auto Grade Calculator helper
   const calculateGrade = (obtained: number, max: number): string => {
     const percent = (obtained / max) * 100;
-    if (percent >= 90) return "A+";
-    if (percent >= 80) return "A";
-    if (percent >= 70) return "B+";
+    if (percent >= 80) return "A+";
+    if (percent >= 70) return "A";
+    if (percent >= 65) return "B+";
     if (percent >= 60) return "B";
     if (percent >= 50) return "C";
     if (percent >= 40) return "D";
+    if (percent >= 30) return "E";
     return "F";
   };
 
@@ -896,17 +897,19 @@ export function ExamModule({
         >
           Exam Date Sheet
         </button>
-        <button
-          onClick={() => {
-            setActiveSubTab("marks");
-            setActiveTranscriptStudent(null);
-          }}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition whitespace-nowrap ${
-            activeSubTab === "marks" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          Marks Entry Desk
-        </button>
+        {activeRole !== "Student" && (
+          <button
+            onClick={() => {
+              setActiveSubTab("marks");
+              setActiveTranscriptStudent(null);
+            }}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition whitespace-nowrap ${
+              activeSubTab === "marks" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Marks Entry Desk
+          </button>
+        )}
         <button
           onClick={() => {
             setActiveSubTab("reports");

@@ -11,7 +11,7 @@ import {
   Layers,
   LogOut,
 } from "lucide-react";
-import { SchoolConfig } from "../types";
+import { SchoolConfig, Student, Teacher } from "../types";
 import { User as FirebaseUser } from "firebase/auth";
 
 interface NavbarProps {
@@ -21,6 +21,7 @@ interface NavbarProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   authUser?: FirebaseUser | null;
+  loggedInUser?: Student | Teacher | null;
   handleLogout?: () => void;
 }
 
@@ -31,10 +32,14 @@ export function Navbar({
   collapsed,
   setCollapsed,
   authUser,
+  loggedInUser,
   handleLogout,
 }: NavbarProps) {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
+
+  // Allow role switching ONLY for Super Admin / Principal if no explicit user is locked
+  const canSwitchRole = (activeRole === "Super Admin" || activeRole === "Principal") && !loggedInUser;
 
   const rolesList: ("Super Admin" | "Principal" | "Teacher" | "Accountant" | "Student" | "Parent")[] = [
     "Super Admin",
@@ -79,41 +84,53 @@ export function Navbar({
 
       {/* Right section: System Utilities */}
       <div className="flex items-center gap-4">
-        {/* Role Quick Switcher (In-UI control) */}
+        {/* Role Badge or Switcher */}
         <div className="relative">
-          <button
-            id="role-switcher-btn"
-            onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-brand-bg hover:bg-brand-accent/20 border border-brand-accent rounded-lg text-brand-sidebar text-xs font-semibold transition"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Portal:</span> {activeRole}
-            <ChevronDown className="w-3 h-3" />
-          </button>
+          {canSwitchRole ? (
+            <>
+              <button
+                id="role-switcher-btn"
+                onClick={() => setShowRoleMenu(!showRoleMenu)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-brand-bg hover:bg-brand-accent/20 border border-brand-accent rounded-lg text-brand-sidebar text-xs font-semibold transition cursor-pointer"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Portal:</span> {activeRole}
+                <ChevronDown className="w-3 h-3" />
+              </button>
 
-          {showRoleMenu && (
-            <div
-              id="role-switcher-dropdown"
-              className="absolute right-0 mt-2 w-48 bg-brand-card border border-brand-accent rounded-xl shadow-lg py-1.5 z-50 text-brand-text-main text-xs"
-            >
-              <div className="px-3 py-1.5 border-b border-brand-accent/30 font-bold text-brand-text-light text-[10px] uppercase tracking-wider">
-                Switch Portal Role
-              </div>
-              {rolesList.map((role) => (
-                <button
-                  key={role}
-                  onClick={() => {
-                    setActiveRole(role);
-                    setShowRoleMenu(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 hover:bg-brand-bg flex items-center justify-between ${
-                    activeRole === role ? "text-brand-sidebar bg-brand-accent/20 font-bold" : ""
-                  }`}
+              {showRoleMenu && (
+                <div
+                  id="role-switcher-dropdown"
+                  className="absolute right-0 mt-2 w-48 bg-brand-card border border-brand-accent rounded-xl shadow-lg py-1.5 z-50 text-brand-text-main text-xs"
                 >
-                  {role}
-                  {activeRole === role && <span className="w-1.5 h-1.5 rounded-full bg-brand-sidebar"></span>}
-                </button>
-              ))}
+                  <div className="px-3 py-1.5 border-b border-brand-accent/30 font-bold text-brand-text-light text-[10px] uppercase tracking-wider">
+                    Switch Portal Role
+                  </div>
+                  {rolesList.map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => {
+                        setActiveRole(role);
+                        setShowRoleMenu(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-brand-bg flex items-center justify-between cursor-pointer ${
+                        activeRole === role ? "text-brand-sidebar bg-brand-accent/20 font-bold" : ""
+                      }`}
+                    >
+                      {role}
+                      {activeRole === role && <span className="w-1.5 h-1.5 rounded-full bg-brand-sidebar"></span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div
+              id="active-portal-badge"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-950 rounded-lg text-xs font-extrabold shadow-xs"
+            >
+              <Shield className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline text-blue-700">Portal:</span> {activeRole}
             </div>
           )}
         </div>

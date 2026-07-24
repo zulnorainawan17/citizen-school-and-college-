@@ -73,7 +73,8 @@ const DEFAULT_GRADE_SCALES: GradeScale[] = [
   { grade: "B", minPercent: 60, maxPercent: 64.99, gpa: 3.0, color: "#2563EB" },
   { grade: "C", minPercent: 50, maxPercent: 59.99, gpa: 2.5, color: "#F59E0B" },
   { grade: "D", minPercent: 40, maxPercent: 49.99, gpa: 2.0, color: "#D97706" },
-  { grade: "F", minPercent: 0, maxPercent: 39.99, gpa: 0.0, color: "#EF4444" },
+  { grade: "E", minPercent: 30, maxPercent: 39.99, gpa: 1.0, color: "#8B5CF6" },
+  { grade: "F", minPercent: 0, maxPercent: 29.99, gpa: 0.0, color: "#EF4444" },
 ];
 
 // Smart Subject Mapping Dictionary for CSV Import Recognition
@@ -124,7 +125,7 @@ export function ResultManagementModule({
   >("student_list");
 
   // Admin Config States
-  const [passingMarksPercent, setPassingMarksPercent] = useState<number>(40);
+  const [passingMarksPercent, setPassingMarksPercent] = useState<number>(30);
   const [useGpaSystem, setUseGpaSystem] = useState<boolean>(false);
   const [isResultLocked, setIsResultLocked] = useState<boolean>(false);
   const [gradeScales, setGradeScales] = useState<GradeScale[]>(DEFAULT_GRADE_SCALES);
@@ -2433,7 +2434,7 @@ export function ResultManagementModule({
                 min={20}
                 max={60}
                 value={passingMarksPercent}
-                onChange={(e) => setPassingMarksPercent(parseInt(e.target.value) || 40)}
+                onChange={(e) => setPassingMarksPercent(parseInt(e.target.value) || 30)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800"
               />
               <span className="text-[10px] text-slate-400">Students obtaining below this percentage in any subject will be marked as Fail.</span>
