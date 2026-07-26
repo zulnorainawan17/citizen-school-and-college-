@@ -159,18 +159,18 @@ export function AttendanceModule({
       const updated = [...attendance];
       updated[existingIdx].status = "Present";
       setAttendance(updated);
+      saveAttendanceBatch([updated[existingIdx]]);
     } else {
-      setAttendance((prev) => [
-        ...prev,
-        {
-          id: `ATT_${Date.now()}_${qrEntityId}`,
-          date: todayStr,
-          entityId: qrEntityId,
-          entityType: type,
-          status: "Present",
-          remarks: "Registered via Smart QR Terminal",
-        },
-      ]);
+      const rec: AttendanceRecord = {
+        id: `ATT_${Date.now()}_${qrEntityId}`,
+        date: todayStr,
+        entityId: qrEntityId,
+        entityType: type,
+        status: "Present",
+        remarks: "Registered via Smart QR Terminal",
+      };
+      setAttendance((prev) => [...prev, rec]);
+      saveAttendanceBatch([rec]);
     }
 
     setQrLog((prev) => [

@@ -21,7 +21,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Homework, TimetableItem, LibraryBook, TransportRoute, HostelRoom, InventoryItem, GRADE_LEVELS, Teacher, Student } from "../types";
-import { saveHomework, deleteHomework, saveBook, deleteBook, saveTransportRoute, deleteTransportRoute, saveHostelRoom, deleteHostelRoom, saveInventoryItem, deleteInventoryItem } from "../lib/firestoreService";
+import { saveHomework, deleteHomework, saveBook, deleteBook, saveTransportRoute, deleteTransportRoute, saveHostelRoom, deleteHostelRoom, saveInventoryItem, deleteInventoryItem, saveTimetableItem, deleteTimetableItem } from "../lib/firestoreService";
 
 interface LogisticsModuleProps {
   homework: Homework[];
@@ -206,6 +206,7 @@ export function LogisticsModule({
 
     // Replace entries for this class with new auto-generated routine
     const existingOtherClasses = timetable.filter((t) => t.className !== selectedClass || (t.section && t.section !== selectedSection));
+    newEntries.forEach((item) => saveTimetableItem(item));
     setTimetable([...existingOtherClasses, ...newEntries]);
     alert(`✅ Standard Pakistani Routine created for ${selectedClass} (${selectedSection})!`);
   };
@@ -232,6 +233,7 @@ export function LogisticsModule({
       roomNo: editingSlot.roomNo,
     };
 
+    saveTimetableItem(newItem);
     if (existingIndex >= 0) {
       const updated = [...timetable];
       updated[existingIndex] = newItem;
@@ -245,6 +247,7 @@ export function LogisticsModule({
 
   // Delete slot
   const handleDeleteSlot = (id: string) => {
+    deleteTimetableItem(id);
     setTimetable(timetable.filter((t) => t.id !== id));
   };
 

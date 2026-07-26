@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Lock,
   Unlock,
+  ShieldAlert,
   RefreshCw,
   FileSpreadsheet,
   BookOpen,
@@ -46,6 +47,7 @@ import {
   Pie,
 } from "recharts";
 import { Student, Teacher, GradeRecord, GRADE_LEVELS, SchoolConfig } from "../types";
+import { saveGradeRecord } from "../lib/firestoreService";
 import { getSubjectsForClass } from "./ExamModule";
 
 interface ResultManagementModuleProps {
@@ -383,9 +385,10 @@ export function ResultManagementModule({
         if (existingIndex > -1) {
           newGrades[existingIndex].marksObtained = score;
           newGrades[existingIndex].grade = grade;
+          saveGradeRecord(newGrades[existingIndex]);
         } else {
-          newGrades.push({
-            id: `GRD_${Date.now()}_${Math.random()}`,
+          const newG: GradeRecord = {
+            id: `GRD_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             studentId: student.id,
             studentName: student.name,
             className: selectedClass,
@@ -394,7 +397,9 @@ export function ResultManagementModule({
             marksObtained: score,
             maxMarks: 100,
             grade: grade,
-          });
+          };
+          newGrades.push(newG);
+          saveGradeRecord(newG);
         }
       });
     });
@@ -659,9 +664,10 @@ export function ResultManagementModule({
       if (existingIndex > -1) {
         newGrades[existingIndex].marksObtained = obtained;
         newGrades[existingIndex].grade = grade;
+        saveGradeRecord(newGrades[existingIndex]);
       } else {
-        newGrades.push({
-          id: `GRD_${Date.now()}_${Math.random()}`,
+        const newG: GradeRecord = {
+          id: `GRD_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           studentId: editingStudentMarks.id,
           studentName: editingStudentMarks.name,
           className: selectedClass,
@@ -670,7 +676,9 @@ export function ResultManagementModule({
           marksObtained: obtained,
           maxMarks: 100,
           grade: grade,
-        });
+        };
+        newGrades.push(newG);
+        saveGradeRecord(newG);
       }
     });
 
@@ -824,9 +832,10 @@ export function ResultManagementModule({
         if (existingIdx > -1) {
           newGrades[existingIdx].marksObtained = score;
           newGrades[existingIdx].grade = grade;
+          saveGradeRecord(newGrades[existingIdx]);
         } else {
-          newGrades.push({
-            id: `GRD_${Date.now()}_${Math.random()}`,
+          const newG: GradeRecord = {
+            id: `GRD_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             studentId: item.student.id,
             studentName: item.student.name,
             className: selectedClass,
@@ -835,7 +844,9 @@ export function ResultManagementModule({
             marksObtained: score,
             maxMarks: 100,
             grade: grade,
-          });
+          };
+          newGrades.push(newG);
+          saveGradeRecord(newG);
         }
       });
     });
@@ -1184,6 +1195,37 @@ export function ResultManagementModule({
             </p>
           </div>
         )}
+      </div>
+    );
+  }
+
+  if (isResultLocked && !isAdminRole) {
+    return (
+      <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-800 text-center space-y-6 max-w-3xl mx-auto my-8">
+        <div className="w-20 h-20 bg-rose-500/20 border-2 border-rose-500/40 text-rose-400 rounded-3xl flex items-center justify-center mx-auto shadow-inner animate-pulse">
+          <Lock className="w-10 h-10" />
+        </div>
+        <div className="space-y-2">
+          <span className="bg-rose-500/20 text-rose-300 text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full border border-rose-500/30 inline-block">
+            🔒 Result Management System Locked
+          </span>
+          <h2 className="text-2xl md:text-3xl font-black text-white">
+            Portal Access Restricted
+          </h2>
+          <p className="text-slate-300 text-xs md:text-sm max-w-lg mx-auto leading-relaxed font-medium">
+            The School Administrator / Principal has locked the Result Management portal.
+            Teachers do not have access to view, edit, enter, or upload marks while results are locked.
+          </p>
+        </div>
+
+        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 text-left max-w-md mx-auto text-xs space-y-2 text-slate-300">
+          <div className="font-bold text-amber-400 flex items-center gap-2 text-sm">
+            <ShieldAlert className="w-4 h-4 text-amber-400" /> Admin Lock Active:
+          </div>
+          <p className="leading-relaxed">
+            Please contact your School Admin or Principal if you need result entry or marks editing unlocked for your class.
+          </p>
+        </div>
       </div>
     );
   }
@@ -2516,7 +2558,7 @@ export function ResultManagementModule({
               <input
                 type="checkbox"
                 checked={isResultLocked}
-                onChange={(e) => setIsResultLocked(e.target.checked)}
+                onChange={(e) => toggleResultLock(e.target.checked)}
                 className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
               />
             </div>

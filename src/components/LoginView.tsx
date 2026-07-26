@@ -121,6 +121,10 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
       setErrorMessage("Please enter admin password.");
       return;
     }
+    if (adminPassword.trim() !== "1717") {
+      setErrorMessage("Incorrect admin password. Please enter valid credentials.");
+      return;
+    }
     setSuccessMessage(`Logging in to ${adminRole} Portal...`);
     setTimeout(() => {
       onLoginSuccess(adminRole);
@@ -291,7 +295,6 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                     className="w-full text-xs font-medium pl-10 border border-slate-200 rounded-xl p-3 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1">Default Demo Password: <span className="font-mono font-bold text-slate-700">admin123</span></p>
               </div>
 
               <button

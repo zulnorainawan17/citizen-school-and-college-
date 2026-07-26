@@ -120,6 +120,8 @@ interface ExamModuleProps {
   schoolConfig?: SchoolConfig;
   activeRole?: string;
   loggedInUser?: Student | Teacher | null;
+  isResultLocked?: boolean;
+  setIsResultLocked?: (locked: boolean) => void;
 }
 
 export function ExamModule({
@@ -131,6 +133,8 @@ export function ExamModule({
   schoolConfig,
   activeRole,
   loggedInUser,
+  isResultLocked,
+  setIsResultLocked,
 }: ExamModuleProps) {
   const [activeSubTab, setActiveSubTab] = useState<"results" | "schedule" | "marks" | "reports" | "toppers">("results");
 
@@ -952,6 +956,8 @@ export function ExamModule({
           schoolConfig={schoolConfig}
           activeRole={activeRole}
           loggedInUser={loggedInUser}
+          isResultLocked={isResultLocked}
+          setIsResultLocked={setIsResultLocked}
         />
       )}
 
@@ -971,12 +977,17 @@ export function ExamModule({
           </div>
 
           {/* Printable Report card visual */}
-          <div className="border border-slate-300 rounded-xl p-5 space-y-6 text-xs bg-slate-50/50" id="transcript-frame">
-            <div className="text-center space-y-1">
-              <h3 className="font-extrabold text-sm text-slate-800 uppercase">
+          <div className="border-2 border-slate-900 rounded-2xl p-6 md:p-8 space-y-6 text-xs bg-white shadow-md font-serif" id="transcript-frame">
+            <div className="text-center font-serif text-xs font-bold text-slate-800 tracking-wider">
+              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+            </div>
+            <div className="text-center space-y-1 border-b-2 border-slate-900 pb-4">
+              <h3 className="font-extrabold text-base md:text-lg text-slate-950 uppercase tracking-wide">
                 {schoolConfig?.schoolName || "Citizen School and College"}
               </h3>
-              <p className="text-[10px] text-slate-500">Official Consolidated Grade Transcript Sheet</p>
+              <p className="text-[11px] font-bold text-slate-600 font-sans uppercase tracking-widest">
+                OFFICIAL DETAILED MARKS CERTIFICATE (DMC) & TRANSCRIPT
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-y-2 border-y border-slate-200 py-3 text-[11px]">
@@ -1585,8 +1596,13 @@ export function ExamModule({
               {/* Decorative Header Border Accent for standard preview */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-600 no-print" />
 
+              {/* Arabic Bismillah Header */}
+              <div className="text-center font-serif text-xs md:text-sm font-bold text-slate-900 tracking-wider">
+                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+              </div>
+
               {/* Institution Emblem Header */}
-              <div className="text-center space-y-2 border-b-2 border-slate-800 pb-4">
+              <div className="text-center space-y-2 border-b-2 border-slate-900 pb-4">
                 <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-800 mb-1">
                   <Calendar className="w-5 h-5" />
                 </div>
@@ -1881,6 +1897,24 @@ export function ExamModule({
 
       {/* SUB-VIEW: Marks Entry Desk */}
       {activeSubTab === "marks" && !activeTranscriptStudent && (
+        isResultLocked && activeRole !== "Super Admin" && activeRole !== "Principal" ? (
+          <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-800 text-center space-y-6 max-w-2xl mx-auto my-6">
+            <div className="w-16 h-16 bg-rose-500/20 border-2 border-rose-500/40 text-rose-400 rounded-3xl flex items-center justify-center mx-auto shadow-inner animate-pulse">
+              <Lock className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <span className="bg-rose-500/20 text-rose-300 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full border border-rose-500/30 inline-block">
+                🔒 Marks Entry Locked
+              </span>
+              <h3 className="text-xl font-black text-white">
+                Marks Entry Desk is Locked by Admin
+              </h3>
+              <p className="text-slate-300 text-xs max-w-md mx-auto leading-relaxed">
+                The School Administrator / Principal has locked result and marks entry. Teachers cannot add or edit student evaluation marks right now.
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-4">
           {/* Controls bar */}
           <div className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1974,6 +2008,7 @@ export function ExamModule({
             </div>
           </div>
         </div>
+        )
       )}
 
       {/* SUB-VIEW: Transcripts Report cards selection */}

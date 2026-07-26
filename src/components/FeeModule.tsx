@@ -18,7 +18,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Student, FeeInvoice, FeeStructure, GRADE_LEVELS, SchoolConfig } from "../types";
-import { saveFeeInvoice, deleteFeeInvoice, saveFeeStructure } from "../lib/firestoreService";
+import { saveFeeInvoice, deleteFeeInvoice, saveFeeStructure, deleteFeeStructure, saveAdmissionVoucher, deleteAdmissionVoucher, subscribeToCollection } from "../lib/firestoreService";
 
 interface FeeModuleProps {
   students: Student[];
@@ -62,38 +62,46 @@ export function FeeModule({
     dueDate: string;
     status: "Pending" | "Paid";
     issueDate: string;
-  }>>([
-    {
-      id: "AV_1",
-      voucherNo: "ADV-2026-0001",
-      studentName: "Muhammad Ali Awan",
-      fatherName: "Zulqarnain Awan",
-      className: "Class 10",
-      admissionFee: 1500,
-      tuitionFee: 800,
-      securityDeposit: 1000,
-      prospectusFee: 500,
-      total: 3800,
-      dueDate: "2026-08-10",
-      status: "Pending",
-      issueDate: "2026-07-21"
-    },
-    {
-      id: "AV_2",
-      voucherNo: "ADV-2026-0002",
-      studentName: "Amna Imran",
-      fatherName: "Imran Khan",
-      className: "Class 9",
-      admissionFee: 1500,
-      tuitionFee: 750,
-      securityDeposit: 1000,
-      prospectusFee: 500,
-      total: 3750,
-      dueDate: "2026-08-10",
-      status: "Paid",
-      issueDate: "2026-07-20"
-    }
-  ]);
+  }>>([]);
+
+  // Subscribe to real-time admission vouchers from Firestore
+  React.useEffect(() => {
+    const initialVouchers = [
+      {
+        id: "AV_1",
+        voucherNo: "ADV-2026-0001",
+        studentName: "Muhammad Ali Awan",
+        fatherName: "Zulqarnain Awan",
+        className: "Class 10",
+        admissionFee: 1500,
+        tuitionFee: 800,
+        securityDeposit: 1000,
+        prospectusFee: 500,
+        total: 3800,
+        dueDate: "2026-08-10",
+        status: "Pending" as const,
+        issueDate: "2026-07-21"
+      },
+      {
+        id: "AV_2",
+        voucherNo: "ADV-2026-0002",
+        studentName: "Amna Imran",
+        fatherName: "Imran Khan",
+        className: "Class 9",
+        admissionFee: 1500,
+        tuitionFee: 750,
+        securityDeposit: 1000,
+        prospectusFee: 500,
+        total: 3750,
+        dueDate: "2026-08-10",
+        status: "Paid" as const,
+        issueDate: "2026-07-20"
+      }
+    ];
+
+    const unsubscribe = subscribeToCollection<any>("admissionVouchers", setAdmissionVouchers, initialVouchers);
+    return () => unsubscribe();
+  }, []);
 
   const [selectedVoucher, setSelectedVoucher] = useState<any | null>(null);
   const [isViewingVoucherDetail, setIsViewingVoucherDetail] = useState(false);
@@ -121,7 +129,7 @@ export function FeeModule({
     }));
   };
 
-  const handleCreateVoucherSubmit = (e: React.FormEvent) => {
+  const handleCreateVoucherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const total = Number(voucherFormData.admissionFee) +
                   Number(voucherFormData.tuitionFee) +
@@ -146,21 +154,28 @@ export function FeeModule({
       issueDate: new Date().toISOString().split("T")[0]
     };
 
+    await saveAdmissionVoucher(newVoucher);
     setAdmissionVouchers([newVoucher, ...admissionVouchers]);
     alert(`Admission fee voucher generated successfully! Voucher No: ${voucherNo}`);
     setIsCreatingVoucher(false);
   };
 
-  const handleCollectVoucherPayment = (id: string) => {
+  const handleCollectVoucherPayment = async (id: string) => {
     if (confirm("Are you sure you want to mark this admission voucher as PAID?")) {
+      const target = admissionVouchers.find(v => v.id === id);
+      if (target) {
+        const updated = { ...target, status: "Paid" as const };
+        await saveAdmissionVoucher(updated);
+      }
       setAdmissionVouchers((prev) =>
         prev.map((v) => (v.id === id ? { ...v, status: "Paid" as const } : v))
       );
     }
   };
 
-  const handleDeleteVoucher = (id: string) => {
+  const handleDeleteVoucher = async (id: string) => {
     if (confirm("Are you sure you want to delete this admission voucher?")) {
+      await deleteAdmissionVoucher(id);
       setAdmissionVouchers((prev) => prev.filter((v) => v.id !== id));
     }
   };
@@ -243,6 +258,7 @@ export function FeeModule({
   const handleDeleteStructure = (id: string) => {
     if (!setFeeStructures) return;
     if (confirm("Are you sure you want to delete this fee structure?")) {
+      deleteFeeStructure(id);
       setFeeStructures((prev) => prev.filter((f) => f.id !== id));
     }
   };

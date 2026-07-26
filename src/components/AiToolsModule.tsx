@@ -32,6 +32,8 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { db } from "../lib/firebase";
+import { SchoolConfig } from "../types";
+import { ComposedExamPaperView, generatePrintablePaperHtml } from "../lib/paperFormatter";
 import {
   collection,
   addDoc,
@@ -52,10 +54,22 @@ interface SavedExamPaper {
   timeAllowed: string;
   maxMarks: string;
   content: string;
+  teacherName?: string;
+  status?: string;
   createdAt?: any;
 }
 
-export function AiToolsModule() {
+interface AiToolsModuleProps {
+  activeRole?: string;
+  loggedInUser?: any;
+  schoolConfig?: SchoolConfig;
+}
+
+export function AiToolsModule({
+  activeRole = "Super Admin",
+  loggedInUser,
+  schoolConfig,
+}: AiToolsModuleProps = {}) {
   const [activeSubTab, setActiveSubTab] = useState<"question-gen" | "lesson-plan">("question-gen");
   const [loading, setLoading] = useState(false);
   const [speechActive, setSpeechActive] = useState(false);
@@ -380,55 +394,17 @@ ${generatedQuestions}`;
       try {
         const printWin = window.open("", "_blank", "width=850,height=950");
         if (printWin) {
-          printWin.document.write(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>${hcSchoolName} - ${hcExamTitle}</title>
-                <style>
-                  body { font-family: Arial, sans-serif; padding: 35px; color: #000; background: #fff; }
-                  .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-                  .header h1 { font-size: 22px; margin: 0; font-family: Georgia, serif; text-transform: uppercase; }
-                  .header h2 { font-size: 13px; margin: 4px 0 0 0; text-transform: uppercase; }
-                  .info-table { display: flex; justify-content: space-between; border: 1px solid #000; padding: 8px 12px; font-size: 11px; font-weight: bold; margin-bottom: 12px; background: #f8f8f8; }
-                  .roll-box { border: 1px solid #000; padding: 8px 12px; font-size: 11px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 15px; }
-                  .paper-body { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; border: 1px solid #ddd; padding: 15px; margin-bottom: 30px; }
-                  .footer { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-top: 30px; border-top: 1px solid #000; padding-top: 15px; }
-                  @media print {
-                    body { padding: 0; }
-                    .paper-body { border: none; }
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="header">
-                  <h1>${hcSchoolName}</h1>
-                  <h2>${hcExamTitle} - ACADEMIC SESSION 2025-2026</h2>
-                </div>
-                <div class="info-table">
-                  <div>SUBJECT: ${hcSubject}</div>
-                  <div>CLASS: ${hcGrade}</div>
-                  <div>TIME: ${hcTime}</div>
-                  <div>MARKS: ${hcMarks}</div>
-                </div>
-                <div class="roll-box">
-                  <div>CANDIDATE ROLL NO: ____________</div>
-                  <div>NAME: ____________________</div>
-                  <div>DATE: _________</div>
-                </div>
-                <div class="paper-body">${generatedQuestions.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-                <div class="footer">
-                  <div>Subject Teacher Signature: __________________</div>
-                  <div>Controller of Examinations: __________________</div>
-                </div>
-                <script>
-                  window.onload = function() {
-                    window.print();
-                  };
-                </script>
-              </body>
-            </html>
-          `);
+          const htmlContent = generatePrintablePaperHtml({
+            schoolName: hcSchoolName || schoolConfig?.schoolName || "CITIZEN SCHOOL & COLLEGE",
+            examTitle: hcExamTitle || "EXAMINATION PAPER",
+            subject: hcSubject || qSubject || "General",
+            grade: hcGrade || qGrade || "Grade 10",
+            timeAllowed: hcTime || "2 Hours",
+            maxMarks: hcMarks || "50 Marks",
+            content: generatedQuestions,
+            teacherName: loggedInUser?.name,
+          });
+          printWin.document.write(htmlContent);
           printWin.document.close();
           return;
         }
@@ -483,18 +459,21 @@ ${generatedQuestions}`;
   const handleSavePaperToDb = async () => {
     if (!generatedQuestions) return;
     setIsSavingToDb(true);
+    const authorName = loggedInUser && "name" in loggedInUser ? loggedInUser.name : (activeRole === "Teacher" ? "Class Teacher" : "School Admin");
     try {
       await addDoc(collection(db, "exam_papers"), {
-        schoolName: hcSchoolName || "CITIZEN SCHOOL & COLLEGE",
+        schoolName: hcSchoolName || schoolConfig?.schoolName || "CITIZEN SCHOOL & COLLEGE",
         examTitle: hcExamTitle || "EXAMINATION PAPER",
         subject: hcSubject || qSubject || "General",
         grade: hcGrade || qGrade || "Grade 10",
         timeAllowed: hcTime || "2 Hours",
         maxMarks: hcMarks || "50 Marks",
         content: generatedQuestions,
+        teacherName: authorName,
+        status: "Submitted to Admin for Print",
         createdAt: serverTimestamp(),
       });
-      setDbSuccessMsg("Saved to Firestore Database! 💾");
+      setDbSuccessMsg("Submitted & Saved to Admin Database! 💾");
       setTimeout(() => setDbSuccessMsg(""), 3500);
     } catch (err: any) {
       console.error("Error saving paper to Firestore:", err);
@@ -1756,59 +1735,20 @@ To activate real-time Gemini generation, configure a valid GEMINI_API_KEY inside
               </div>
             </div>
 
-            {/* Printable Exam Paper Content */}
-            <div className="p-8 overflow-y-auto printable-area bg-white text-slate-900 text-xs space-y-6">
-              {/* Institution Emblem Header */}
-              <div className="text-center space-y-1.5 border-b-2 border-slate-900 pb-4">
-                <h1 className="text-xl font-extrabold uppercase tracking-widest font-serif text-slate-900">
-                  {hcSchoolName}
-                </h1>
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
-                  {hcExamTitle} - ACADEMIC SESSION 2025-2026
-                </h2>
-              </div>
-
-              {/* Exam Info Table */}
-              <div className="border border-slate-900 rounded p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px] font-semibold bg-slate-50/50">
-                <div>
-                  <span className="text-slate-500 block text-[9px] uppercase">Subject</span>
-                  <span>{hcSubject}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[9px] uppercase">Class Level</span>
-                  <span>{hcGrade}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[9px] uppercase">Time Allowed</span>
-                  <span>{hcTime}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[9px] uppercase">Maximum Marks</span>
-                  <span>{hcMarks}</span>
-                </div>
-              </div>
-
-              {/* Student Roll No Box */}
-              <div className="border border-slate-900 p-2.5 flex flex-wrap items-center justify-between gap-4 font-bold text-[11px]">
-                <div>CANDIDATE ROLL NO: <span className="border-b border-slate-900 inline-block w-32 ml-1"></span></div>
-                <div>STUDENT NAME: <span className="border-b border-slate-900 inline-block w-48 ml-1"></span></div>
-                <div>DATE: <span className="border-b border-slate-900 inline-block w-24 ml-1"></span></div>
-              </div>
-
-              {/* Formatted Questions Body */}
-              <div className="font-mono text-[11px] whitespace-pre-wrap leading-relaxed text-slate-900 border border-slate-200 p-4 rounded bg-white">
-                {generatedQuestions}
-              </div>
-
-              {/* Signatures & Controller Stamp Footer */}
-              <div className="pt-8 border-t border-slate-400 flex items-center justify-between text-[11px] font-bold text-slate-800">
-                <div>
-                  <p className="border-t border-slate-800 pt-1 w-44 text-center">Subject Teacher Signature</p>
-                </div>
-                <div>
-                  <p className="border-t border-slate-800 pt-1 w-48 text-center">Controller of Examinations</p>
-                </div>
-              </div>
+            {/* Printable Composed Board Exam Paper Content */}
+            <div className="p-6 overflow-y-auto printable-area bg-slate-100">
+              <ComposedExamPaperView
+                paper={{
+                  schoolName: hcSchoolName || schoolConfig?.schoolName || "CITIZEN SCHOOL & COLLEGE",
+                  examTitle: hcExamTitle || "EXAMINATION PAPER",
+                  subject: hcSubject || qSubject || "General",
+                  grade: hcGrade || qGrade || "Grade 10",
+                  timeAllowed: hcTime || "2 Hours",
+                  maxMarks: hcMarks || "50 Marks",
+                  content: generatedQuestions,
+                  teacherName: loggedInUser?.name,
+                }}
+              />
             </div>
           </div>
         </div>
@@ -1848,16 +1788,22 @@ To activate real-time Gemini generation, configure a valid GEMINI_API_KEY inside
                       className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 transition flex flex-col md:flex-row md:items-center justify-between gap-3"
                     >
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-slate-900 text-xs">{paper.schoolName}</span>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">
                             {paper.subject} ({paper.grade})
                           </span>
+                          {paper.teacherName && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
+                              ✍️ By: {paper.teacherName}
+                            </span>
+                          )}
                         </div>
                         <p className="text-[11px] font-semibold text-slate-700">{paper.examTitle}</p>
-                        <div className="text-[10px] text-slate-500 flex gap-3">
+                        <div className="text-[10px] text-slate-500 flex flex-wrap gap-3">
                           <span>Time: {paper.timeAllowed}</span>
                           <span>Marks: {paper.maxMarks}</span>
+                          {paper.status && <span className="text-emerald-700 font-bold">• {paper.status}</span>}
                         </div>
                       </div>
 

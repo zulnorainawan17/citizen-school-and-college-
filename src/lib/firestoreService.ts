@@ -294,6 +294,57 @@ export async function saveFeeStructure(feeStruct: FeeStructure): Promise<void> {
   }
 }
 
+export async function deleteFeeStructure(feeId: string): Promise<void> {
+  const path = `feeStructures/${feeId}`;
+  try {
+    await deleteDoc(doc(db, "feeStructures", feeId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+// --- Admission Vouchers ---
+export async function saveAdmissionVoucher(voucher: any): Promise<void> {
+  const path = "admissionVouchers";
+  try {
+    const vId = voucher.id || doc(collection(db, path)).id;
+    const docRef = doc(db, path, vId);
+    await setDoc(docRef, { ...voucher, id: vId }, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteAdmissionVoucher(voucherId: string): Promise<void> {
+  const path = `admissionVouchers/${voucherId}`;
+  try {
+    await deleteDoc(doc(db, "admissionVouchers", voucherId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+// --- Timetable / Class Routines ---
+export async function saveTimetableItem(item: TimetableItem): Promise<void> {
+  const path = "classRoutines";
+  try {
+    const tId = item.id || doc(collection(db, path)).id;
+    const docRef = doc(db, path, tId);
+    await setDoc(docRef, { ...item, id: tId }, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteTimetableItem(itemId: string): Promise<void> {
+  const path = `classRoutines/${itemId}`;
+  try {
+    await deleteDoc(doc(db, "classRoutines", itemId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 // --- Attendance ---
 export async function saveAttendanceBatch(records: AttendanceRecord[]): Promise<void> {
   const path = "attendance";
@@ -469,6 +520,15 @@ export async function savePayslip(payslip: Payslip): Promise<void> {
   }
 }
 
+export async function deletePayslip(payId: string): Promise<void> {
+  const path = `payroll/${payId}`;
+  try {
+    await deleteDoc(doc(db, "payroll", payId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 // --- Leave Requests ---
 export async function saveLeaveRequest(request: LeaveRequest): Promise<void> {
   const path = "leaveRequests";
@@ -478,6 +538,15 @@ export async function saveLeaveRequest(request: LeaveRequest): Promise<void> {
     await setDoc(docRef, { ...request, id: reqId }, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteLeaveRequest(reqId: string): Promise<void> {
+  const path = `leaveRequests/${reqId}`;
+  try {
+    await deleteDoc(doc(db, "leaveRequests", reqId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }
 
