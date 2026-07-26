@@ -75,9 +75,9 @@ export function StudentModule({
   const getClassDefaultFees = (className: string) => {
     const structure = feeStructures.find((f) => f.className === className);
     return {
-      monthlyFee: structure ? structure.monthlyFee : 250,
-      admissionFee: structure ? structure.admissionFee : 500,
-      examFee: structure ? structure.examFee : 50,
+      monthlyFee: structure ? structure.monthlyFee : 0,
+      admissionFee: structure ? structure.admissionFee : 0,
+      examFee: structure ? structure.examFee : 0,
     };
   };
 
@@ -131,6 +131,74 @@ export function StudentModule({
   const handleViewIdCard = (student: Student) => {
     setSelectedStudent(student);
     setViewMode("id-card");
+  };
+
+  const handlePrintStudentIdCard = () => {
+    if (idCardLayout !== "side-by-side") {
+      setIdCardLayout("side-by-side");
+    }
+    setTimeout(() => {
+      const cardArea = document.getElementById("student-id-card-print-area");
+      const schoolName = "CITIZEN SCHOOL & COLLEGE";
+      const studentName = selectedStudent?.name || "Student";
+
+      const printWin = window.open("", "_blank", "width=920,height=850");
+      if (printWin && cardArea) {
+        printWin.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${schoolName} - Student ID Card - ${studentName}</title>
+              <script src="https://cdn.tailwindcss.com"></script>
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+                @page { size: A4 portrait; margin: 10mm; }
+                body {
+                  font-family: 'Plus Jakarta Sans', sans-serif;
+                  background-color: #ffffff;
+                  color: #000000;
+                  padding: 20px;
+                  margin: 0;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
+                #student-id-card-print-area {
+                  display: flex !important;
+                  flex-wrap: wrap !important;
+                  gap: 2rem !important;
+                  justify-content: center !important;
+                  align-items: center !important;
+                  max-width: 100% !important;
+                  margin: 0 auto !important;
+                  padding: 10px !important;
+                }
+                @media print {
+                  body { padding: 0 !important; }
+                  .no-print { display: none !important; }
+                }
+              </style>
+            </head>
+            <body>
+              <div style="text-align: center; margin-bottom: 20px;" class="no-print">
+                <h2 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">${schoolName}</h2>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">Official Student Identity Card (Front & Back Layout)</p>
+              </div>
+              ${cardArea.outerHTML}
+              <script>
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.print();
+                  }, 400);
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        printWin.document.close();
+      } else {
+        window.print();
+      }
+    }, idCardLayout !== "side-by-side" ? 250 : 50);
   };
 
   const handleDeleteStudent = (student: Student) => {
@@ -960,7 +1028,7 @@ export function StudentModule({
           {/* Embedded Print CSS to print ONLY the ID card and hide all other app elements */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
-              body * {
+              body > * {
                 visibility: hidden !important;
               }
               #student-id-card-print-area, #student-id-card-print-area * {
@@ -971,11 +1039,15 @@ export function StudentModule({
                 left: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
-                display: grid !important;
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                display: flex !important;
+                flex-wrap: wrap !important;
                 gap: 2rem !important;
                 justify-content: center !important;
                 align-items: center !important;
+                background: white !important;
+                padding: 20px !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
             }
           `}} />
@@ -1016,17 +1088,8 @@ export function StudentModule({
 
               {/* Print Button */}
               <button
-                onClick={() => {
-                  if (idCardLayout !== "side-by-side") {
-                    setIdCardLayout("side-by-side");
-                    setTimeout(() => {
-                      window.print();
-                    }, 200);
-                  } else {
-                    window.print();
-                  }
-                }}
-                className="text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 py-1.5 px-4 rounded-lg border border-emerald-800 transition flex items-center gap-1.5"
+                onClick={handlePrintStudentIdCard}
+                className="text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 py-1.5 px-4 rounded-lg border border-emerald-800 transition flex items-center gap-1.5 shadow-sm"
               >
                 <Printer className="w-3.5 h-3.5" /> Print Card
               </button>

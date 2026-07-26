@@ -2,6 +2,7 @@ import React from "react";
 import {
   GraduationCap,
   Users,
+  Briefcase,
   UserCheck,
   CreditCard,
   BookOpen,
@@ -54,6 +55,7 @@ export function Sidebar({
     const adminItems = [
       { id: "students", label: "Students", icon: GraduationCap },
       { id: "teachers", label: "Teachers", icon: Users },
+      { id: "staff", label: "Staff Register", icon: Briefcase },
       { id: "attendance", label: "Attendance", icon: UserCheck },
       { id: "fees", label: "Fees & Invoices", icon: CreditCard },
       { id: "exams", label: "Exams & Marks", icon: ClipboardList },
@@ -66,6 +68,7 @@ export function Sidebar({
     const principalItems = [
       { id: "students", label: "Students", icon: GraduationCap },
       { id: "teachers", label: "Teachers", icon: Users },
+      { id: "staff", label: "Staff Register", icon: Briefcase },
       { id: "attendance", label: "Attendance Report", icon: UserCheck },
       { id: "fees", label: "Fee Reports", icon: CreditCard },
       { id: "exams", label: "Exams & Results", icon: ClipboardList },

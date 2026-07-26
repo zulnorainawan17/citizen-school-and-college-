@@ -51,8 +51,14 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(90, 90, 64, 0.1) !important;
 }
 
-/* Clean Print Styles for Exam Papers, Fee Vouchers, and Certificates */
+/* Clean Print Styles for Exam Papers, Fee Vouchers, ID Cards, and Certificates */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   /* Hide standard non-printable elements */
   .no-print, nav, aside, header {
     display: none !important;

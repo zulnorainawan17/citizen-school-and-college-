@@ -11,6 +11,7 @@ import {
   Briefcase,
   FileText,
   Bookmark,
+  Printer,
 } from "lucide-react";
 import { Teacher, TEACHER_DEPARTMENTS } from "../types";
 import { saveTeacher, deleteTeacher } from "../lib/firestoreService";
@@ -38,7 +39,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
     department: TEACHER_DEPARTMENTS[0] || "Early Years (Playgroup/Nursery)",
     qualification: "",
     experience: "",
-    salary: 3000,
+    salary: 0,
     dob: "",
     joiningDate: "",
     status: "Active",
@@ -55,7 +56,7 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
       department: TEACHER_DEPARTMENTS[0] || "Early Years (Playgroup/Nursery)",
       qualification: "M.A. in Early Childhood Education",
       experience: "5 Years",
-      salary: 3500,
+      salary: 0,
       dob: "1990-01-01",
       joiningDate: new Date().toISOString().split("T")[0],
       status: "Active",
@@ -80,6 +81,68 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
   const handleViewIdCard = (teacher: Teacher) => {
     setSelectedTeacher(teacher);
     setViewMode("id-card");
+  };
+
+  const handlePrintTeacherIdCard = () => {
+    const cardElement = document.getElementById("teacher-id-card-element");
+    const schoolName = "CITIZEN SCHOOL & COLLEGE";
+    const teacherName = selectedTeacher?.name || "Faculty Member";
+
+    const printWin = window.open("", "_blank", "width=850,height=800");
+    if (printWin && cardElement) {
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${schoolName} - Faculty ID Card - ${teacherName}</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+              @page { size: A4 portrait; margin: 10mm; }
+              body {
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                background-color: #ffffff;
+                color: #000000;
+                padding: 30px;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 90vh;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              #teacher-id-card-element {
+                margin: 0 auto !important;
+                box-shadow: none !important;
+              }
+              @media print {
+                body { padding: 0 !important; }
+                .no-print { display: none !important; }
+              }
+            </style>
+          </head>
+          <body>
+            <div style="text-align: center; margin-bottom: 20px;" class="no-print">
+              <h2 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">${schoolName}</h2>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">Official Faculty & Staff Identity Card</p>
+            </div>
+            ${cardElement.outerHTML}
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                }, 400);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWin.document.close();
+    } else {
+      window.print();
+    }
   };
 
   const handleDeleteTeacher = (teacher: Teacher) => {
@@ -548,6 +611,26 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
       {/* VIEW: Printable Teacher ID Card */}
       {viewMode === "id-card" && selectedTeacher && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media print {
+              body > * {
+                visibility: hidden !important;
+              }
+              #teacher-id-card-element, #teacher-id-card-element * {
+                visibility: visible !important;
+              }
+              #teacher-id-card-element {
+                position: absolute !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                background: #0f172a !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
+          `}} />
+
           <div className="text-center">
             <p className="text-xs text-slate-500 mb-2">Printable Teacher Identity Card Preview</p>
           </div>
@@ -612,10 +695,10 @@ export function TeacherModule({ teachers, setTeachers }: TeacherModuleProps) {
 
           <div className="text-center pt-2">
             <button
-              onClick={() => window.print()}
-              className="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 py-2 px-5 rounded-lg border border-slate-900 transition"
+              onClick={handlePrintTeacherIdCard}
+              className="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 py-2.5 px-6 rounded-lg border border-slate-900 transition flex items-center gap-2 mx-auto shadow-sm"
             >
-              Print ID Card Layout
+              <Printer className="w-4 h-4" /> Print Faculty ID Card
             </button>
           </div>
         </div>

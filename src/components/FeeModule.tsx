@@ -111,10 +111,10 @@ export function FeeModule({
     studentName: "",
     fatherName: "",
     className: "Class 10",
-    admissionFee: 1500,
-    tuitionFee: 800,
-    securityDeposit: 1000,
-    prospectusFee: 500,
+    admissionFee: 0,
+    tuitionFee: 0,
+    securityDeposit: 0,
+    prospectusFee: 0,
     dueDate: "2026-08-10",
   });
 
@@ -124,8 +124,8 @@ export function FeeModule({
     setVoucherFormData((prev) => ({
       ...prev,
       className: selectedClass,
-      admissionFee: structure ? structure.admissionFee : 1500,
-      tuitionFee: structure ? structure.monthlyFee : 800,
+      admissionFee: structure ? structure.admissionFee : 0,
+      tuitionFee: structure ? structure.monthlyFee : 0,
     }));
   };
 
@@ -209,9 +209,9 @@ export function FeeModule({
     setEditingStructure(null);
     setStructureFormData({
       className: "",
-      monthlyFee: 250,
-      admissionFee: 500,
-      examFee: 50,
+      monthlyFee: 0,
+      admissionFee: 0,
+      examFee: 0,
       transportFee: 0,
       hostelFee: 0,
     });
@@ -265,7 +265,7 @@ export function FeeModule({
 
   const getStudentDefaultFee = (studentId: string) => {
     const student = students.find((s) => s.id === studentId);
-    if (!student) return 280;
+    if (!student) return 0;
 
     // 1. If student has customized monthlyFee stored on them, use it!
     if (student.monthlyFee !== undefined && student.monthlyFee !== null) {
@@ -278,7 +278,7 @@ export function FeeModule({
       return structure.monthlyFee;
     }
 
-    return 280; // overall fallback
+    return 0; // overall fallback
   };
 
   // Search & Filter
@@ -294,7 +294,7 @@ export function FeeModule({
   const [newInvoiceData, setNewInvoiceData] = useState({
     studentId: "STU001",
     month: "August 2026",
-    amount: 280,
+    amount: 0,
     discount: 0,
     fine: 0,
   });
@@ -644,6 +644,79 @@ export function FeeModule({
     printWindow.document.close();
   };
 
+  // Function to print 3-part Fee Deposit Voucher
+  const handlePrintFeeVoucher = (voucherTitle: string = "Fee Deposit Voucher") => {
+    const voucherElement = document.getElementById("printable-voucher-zone");
+    const schoolName = customVoucherSchoolName || schoolConfig?.schoolName || "Citizen School and College";
+
+    const printWin = window.open("", "_blank", "width=1000,height=850");
+    if (printWin && voucherElement) {
+      const clone = voucherElement.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll(".no-print").forEach((el) => el.remove());
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${schoolName} - ${voucherTitle}</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+              @page {
+                size: A4 landscape;
+                margin: 8mm 10mm;
+              }
+              body {
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                background-color: #ffffff;
+                color: #000000;
+                padding: 15px;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              #printable-voucher-zone {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 1.25rem !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                background: white !important;
+              }
+              #printable-voucher-zone > div {
+                border-right: 1.5px dashed #cbd5e1;
+                padding-right: 12px;
+              }
+              #printable-voucher-zone > div:last-child {
+                border-right: none;
+                padding-right: 0;
+              }
+              @media print {
+                body { padding: 5px !important; }
+                .no-print { display: none !important; }
+              }
+            </style>
+          </head>
+          <body>
+            ${clone.outerHTML}
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                }, 400);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWin.document.close();
+    } else {
+      window.print();
+    }
+  };
+
   // Function to export Date Sheet to Microsoft Word (.doc) format
   const exportLedgerToWord = () => {
     const area = document.getElementById("printable-class-ledger-area");
@@ -776,7 +849,7 @@ export function FeeModule({
           {/* Print Styles for Monthly Fee Invoice */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
-              body * {
+              body > * {
                 visibility: hidden !important;
               }
               #printable-voucher-zone, #printable-voucher-zone * {
@@ -791,6 +864,8 @@ export function FeeModule({
                 padding: 15px !important;
                 background: white !important;
                 color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
               .no-print {
                 display: none !important;
@@ -816,7 +891,7 @@ export function FeeModule({
                 className="text-xs border border-slate-200 rounded-lg p-2 bg-slate-50 font-semibold text-slate-800 focus:outline-hidden"
               />
               <button
-                onClick={() => window.print()}
+                onClick={() => handlePrintFeeVoucher("Monthly Fee Voucher")}
                 className="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 py-2 px-4 rounded-lg flex items-center gap-1.5 transition shadow-xs"
               >
                 <Printer className="w-4 h-4" /> Print 3-Part Voucher
@@ -1428,7 +1503,7 @@ export function FeeModule({
           {/* Print Styles for Admission Voucher */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
-              body * {
+              body > * {
                 visibility: hidden !important;
               }
               #printable-voucher-zone, #printable-voucher-zone * {
@@ -1443,6 +1518,8 @@ export function FeeModule({
                 padding: 15px !important;
                 background: white !important;
                 color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
               .no-print {
                 display: none !important;
@@ -1471,7 +1548,7 @@ export function FeeModule({
                     className="text-xs border border-slate-200 rounded-lg p-2 bg-slate-50 font-semibold text-slate-800 focus:outline-hidden"
                   />
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => handlePrintFeeVoucher("Admission Fee Voucher")}
                     className="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 py-2 px-4 rounded-lg flex items-center gap-1.5 transition shadow-xs"
                   >
                     <Printer className="w-4 h-4" /> Print 3-Part Voucher

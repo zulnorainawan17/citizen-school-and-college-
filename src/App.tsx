@@ -8,6 +8,7 @@ import { Navbar } from "./components/Navbar";
 import { DashboardView } from "./components/DashboardView";
 import { StudentModule } from "./components/StudentModule";
 import { TeacherModule } from "./components/TeacherModule";
+import { StaffModule } from "./components/StaffModule";
 import { AttendanceModule } from "./components/AttendanceModule";
 import { FeeModule } from "./components/FeeModule";
 import { ExamModule } from "./components/ExamModule";
@@ -269,6 +270,7 @@ export default function App() {
           "dashboard",
           "students",
           "teachers",
+          "staff",
           "attendance",
           "fees",
           "exams",
@@ -278,11 +280,11 @@ export default function App() {
           "settings",
         ];
       case "Principal":
-        return ["dashboard", "students", "teachers", "attendance", "fees", "exams", "ai-tools", "settings"];
+        return ["dashboard", "students", "teachers", "staff", "attendance", "fees", "exams", "ai-tools", "settings"];
       case "Teacher":
         return ["attendance", "exams", "timetable", "ai-tools"];
       case "Accountant":
-        return ["fees"];
+        return ["fees", "staff"];
       case "Student":
         return ["students", "exams"];
       case "Parent":
@@ -376,6 +378,8 @@ export default function App() {
         );
       case "teachers":
         return <TeacherModule teachers={teachers} setTeachers={setTeachers} />;
+      case "staff":
+        return <StaffModule staff={staff} setStaff={setStaff} schoolConfig={schoolConfig} />;
       case "attendance":
         return (
           <AttendanceModule
