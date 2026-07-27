@@ -33,6 +33,28 @@ function getGeminiClient(): GoogleGenAI {
   return aiClient;
 }
 
+// Sitemap XML Endpoint
+app.get("/sitemap.xml", (req, res) => {
+  res.header("Content-Type", "text/xml");
+  res.send(`<?xml version='1.0' encoding='utf-8'?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://citizen-school-and-college.vercel.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://citizen-school-and-college.vercel.app/about</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://citizen-school-and-college.vercel.app/academics</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://citizen-school-and-college.vercel.app/admissions</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://citizen-school-and-college.vercel.app/faculty</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://citizen-school-and-college.vercel.app/campus-life</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://citizen-school-and-college.vercel.app/news</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://citizen-school-and-college.vercel.app/contact</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+</urlset>`);
+});
+
+// Google Search Console Verification Endpoint
+app.get("/google537982b73f6c8b9f.html", (req, res) => {
+  res.header("Content-Type", "text/html");
+  res.send("google-site-verification: google537982b73f6c8b9f.html");
+});
+
 // Gemini API proxy endpoint
 app.post("/api/gemini", async (req, res) => {
   try {
